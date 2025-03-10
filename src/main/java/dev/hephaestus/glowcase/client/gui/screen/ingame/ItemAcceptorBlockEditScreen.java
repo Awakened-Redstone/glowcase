@@ -25,15 +25,13 @@ public class ItemAcceptorBlockEditScreen extends GlowcaseScreen {
 
 		if (this.client == null) return;
 
-		Identifier item = this.itemAcceptorBlockEntity.getItem();
-
 		this.itemWidget = new TextFieldWidget(this.textRenderer, width / 2 - 75, height / 2 - 40, 150, 20, Text.empty());
 		this.itemWidget.setMaxLength(128);
-		if (!item.equals(Identifier.ofVanilla("air"))) {
-			this.itemWidget.setText((this.itemAcceptorBlockEntity.isItemTag ? "#" : "") + item);
+		if (!this.itemAcceptorBlockEntity.getItem().isBlank()) {
+			this.itemWidget.setText((this.itemAcceptorBlockEntity.inputType == ItemAcceptorBlockEntity.InputType.COMMAND ? "/" : (this.itemAcceptorBlockEntity.inputType == ItemAcceptorBlockEntity.InputType.ITEM_TAG ? "#" : "")) + this.itemAcceptorBlockEntity.getItem());
 		}
 		this.itemWidget.setPlaceholder(Text.translatable("gui.glowcase.item_or_tag"));
-		this.itemWidget.setTextPredicate(s -> s.matches("#?[a-z0-9_.-]*:?[a-z0-9_./-]*"));
+		this.itemWidget.setTextPredicate(s -> s.startsWith("/") || s.matches("#?[a-z0-9_.-]*:?[a-z0-9_./-]*"));
 
 		this.countWidget = new TextFieldWidget(this.textRenderer, width / 2 - 75, height / 2 - 10, 150, 20, Text.empty());
 		this.countWidget.setText(String.valueOf(this.itemAcceptorBlockEntity.count));
@@ -59,15 +57,19 @@ public class ItemAcceptorBlockEditScreen extends GlowcaseScreen {
 	public void close() {
 		String text = itemWidget.getText();
 		boolean isItemTag = text.startsWith("#");
-		if (isItemTag) {
+		boolean isCommand = text.startsWith("/");
+		if (isItemTag || isCommand) {
 			text = text.substring(1);
 		}
 
-		if (!text.isEmpty() && Identifier.tryParse(text) instanceof Identifier id) {
-			this.itemAcceptorBlockEntity.setItem(id);
-			this.itemAcceptorBlockEntity.isItemTag = isItemTag;
+		if (isCommand) {
+			this.itemAcceptorBlockEntity.setItem(text);
+			this.itemAcceptorBlockEntity.inputType = ItemAcceptorBlockEntity.InputType.COMMAND;
+		} else if (!text.isEmpty() && Identifier.tryParse(text) instanceof Identifier) {
+			this.itemAcceptorBlockEntity.setItem(text);
+			this.itemAcceptorBlockEntity.inputType = isItemTag ? ItemAcceptorBlockEntity.InputType.ITEM_TAG : ItemAcceptorBlockEntity.InputType.ITEM;
 		} else {
-			this.itemAcceptorBlockEntity.setItem(Identifier.ofVanilla("air"));
+			this.itemAcceptorBlockEntity.setItem("");
 		}
 
 		if (Ints.tryParse(countWidget.getText()) instanceof Integer integer) {

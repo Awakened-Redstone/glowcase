@@ -65,13 +65,13 @@ public record ItemAcceptorBlockEntityRenderer(BlockEntityRendererFactory.Context
 		System.arraycopy(lights, 0, RenderSystemAccessor.getShaderLightDirections(), 0, 2);
 
 		// Render count
-		if (entity.count > 1) {
+		String string = entity.inputType == ItemAcceptorBlockEntity.InputType.COMMAND ? "/?" : String.valueOf(entity.count);
+		if (!string.equals("1")) {
 			float scale = 0.0625F;
 			matrices.translate(0, 0, 1);
 			matrices.scale(scale, -scale, scale);
 
 			TextRenderer textRenderer = context.getTextRenderer();
-			String string = String.valueOf(entity.count);
 			textRenderer.draw(string, 9 - textRenderer.getWidth(string), 1, Colors.WHITE, false, matrices.peek().getPositionMatrix(), vertexConsumers, TextRenderer.TextLayerType.NORMAL, 0, LightmapTextureManager.MAX_LIGHT_COORDINATE);
 		}
 

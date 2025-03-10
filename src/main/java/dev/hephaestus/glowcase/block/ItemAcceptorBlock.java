@@ -78,22 +78,28 @@ public class ItemAcceptorBlock extends GlowcaseBlock implements BlockEntityProvi
 			return ItemActionResult.CONSUME;
 		}
 
-		if (!be.isItemAccepted(stack)) {
-			return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
-		}
-
 		if (world.getBlockTickScheduler().isQueued(pos, this) || state.get(POWERED)) {
 			return ItemActionResult.SKIP_DEFAULT_BLOCK_INTERACTION;
 		}
 
-		if (!world.isClient()) {
-			// Remove items
-			ItemStack newStack = stack.copyWithCount(be.count);
-			stack.decrementUnlessCreative(be.count, player);
+		if (be.inputType == ItemAcceptorBlockEntity.InputType.COMMAND && canEditGlowcase(player, pos)) {
+			return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+		}
 
-			// Attempt to insert items
-			if (getInventoryAt(world, pos.offset(getOutputDirection(world, pos, state))) instanceof Inventory inventory) {
-				addToFirstFreeSlot(inventory, newStack);
+		if (!world.isClient()) {
+			if (!be.isAccepted(player, stack)) {
+				return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+			}
+
+			if (be.inputType != ItemAcceptorBlockEntity.InputType.COMMAND) {
+				// Remove items
+				ItemStack newStack = stack.copyWithCount(be.count);
+				stack.decrementUnlessCreative(be.count, player);
+
+				// Attempt to insert items
+				if (getInventoryAt(world, pos.offset(getOutputDirection(world, pos, state))) instanceof Inventory inventory) {
+					addToFirstFreeSlot(inventory, newStack);
+				}
 			}
 
 			// Schedule redstone pulse

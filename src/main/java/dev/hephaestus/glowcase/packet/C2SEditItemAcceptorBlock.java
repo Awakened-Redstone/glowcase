@@ -7,23 +7,23 @@ import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.network.codec.PacketCodecs;
 import net.minecraft.network.packet.CustomPayload;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 
-public record C2SEditItemAcceptorBlock(BlockPos pos, Identifier item, int count, boolean isItemTag, ItemAcceptorBlockEntity.OutputDirection outputDirection) implements C2SEditBlockEntity {
+public record C2SEditItemAcceptorBlock(BlockPos pos, String item, int count, ItemAcceptorBlockEntity.InputType inputType, ItemAcceptorBlockEntity.OutputDirection outputDirection) implements C2SEditBlockEntity {
 	public static final Id<C2SEditItemAcceptorBlock> ID = new Id<>(Glowcase.id("channel.item_acceptor.save"));
 	public static final PacketCodec<RegistryByteBuf, C2SEditItemAcceptorBlock> PACKET_CODEC = PacketCodec.tuple(
 		BlockPos.PACKET_CODEC, C2SEditItemAcceptorBlock::pos,
-		Identifier.PACKET_CODEC, C2SEditItemAcceptorBlock::item,
+		PacketCodecs.STRING, C2SEditItemAcceptorBlock::item,
 		PacketCodecs.INTEGER, C2SEditItemAcceptorBlock::count,
-		PacketCodecs.BOOL, C2SEditItemAcceptorBlock::isItemTag,
+		PacketCodecs.indexed(i -> ItemAcceptorBlockEntity.InputType.values()[i], ItemAcceptorBlockEntity.InputType::ordinal), C2SEditItemAcceptorBlock::inputType,
 		PacketCodecs.BYTE.xmap(index -> ItemAcceptorBlockEntity.OutputDirection.values()[index], outputDirection -> (byte) outputDirection.ordinal()), C2SEditItemAcceptorBlock::outputDirection,
 		C2SEditItemAcceptorBlock::new
 	);
 
 	public static C2SEditItemAcceptorBlock of(ItemAcceptorBlockEntity be) {
-		return new C2SEditItemAcceptorBlock(be.getPos(), be.getItem(), be.count, be.isItemTag, be.outputDirection);
+		return new C2SEditItemAcceptorBlock(be.getPos(), be.getItem(), be.count, be.inputType, be.outputDirection);
 	}
 
 	@Override
@@ -37,9 +37,14 @@ public record C2SEditItemAcceptorBlock(BlockPos pos, Identifier item, int count,
 
 		be.setItem(this.item());
 		be.count = this.count();
-		be.isItemTag = this.isItemTag();
+		be.inputType = this.inputType();
 		be.outputDirection = this.outputDirection();
 
 		be.markDirty();
+	}
+
+	@Override
+	public boolean canEdit(ServerPlayerEntity player) {
+		return C2SEditBlockEntity.super.canEdit(player) && (inputType != ItemAcceptorBlockEntity.InputType.COMMAND || player.hasPermissionLevel(2));
 	}
 }
