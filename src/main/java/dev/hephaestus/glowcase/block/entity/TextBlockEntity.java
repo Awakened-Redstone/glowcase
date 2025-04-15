@@ -1,6 +1,7 @@
 package dev.hephaestus.glowcase.block.entity;
 
 import dev.hephaestus.glowcase.Glowcase;
+import dev.hephaestus.glowcase.client.util.ColorUtil;
 import eu.pb4.placeholders.api.ParserContext;
 import eu.pb4.placeholders.api.parsers.NodeParser;
 import eu.pb4.placeholders.api.parsers.TagParser;
@@ -19,12 +20,16 @@ import java.util.List;
 
 public class TextBlockEntity extends GlowcaseBlockEntity {
 	public static final NodeParser PARSER = TagParser.DEFAULT;
+
+	public static final int PLATE_BACKGROUND = 0x44000000;
+
 	public List<Text> lines = new ArrayList<>();
 	public TextAlignment textAlignment = TextAlignment.CENTER;
 	public ZOffset zOffset = ZOffset.CENTER;
-	public ShadowType shadowType = ShadowType.DROP;
+	public boolean shadow = true;
 	public float scale = 1F;
-	public int color = 0xFFFFFF;
+	public int color = ColorUtil.WHITE;
+	public int backgroundColor = 0;
 	public boolean renderDirty = true;
 	public float viewDistance = -1.0F;
 
@@ -39,10 +44,11 @@ public class TextBlockEntity extends GlowcaseBlockEntity {
 
 		tag.putFloat("scale", this.scale);
 		tag.putInt("color", this.color);
+		tag.putInt("background_color", this.backgroundColor);
 
 		tag.putString("text_alignment", this.textAlignment.name());
 		tag.putString("z_offset", this.zOffset.name());
-		tag.putString("shadow_type", this.shadowType.name());
+		tag.putBoolean("shadow", this.shadow);
 		tag.putFloat("viewDistance", this.viewDistance);
 
 		NbtList lines = tag.getList("lines", 8);
@@ -61,9 +67,38 @@ public class TextBlockEntity extends GlowcaseBlockEntity {
 		this.scale = tag.getFloat("scale");
 		this.color = tag.getInt("color");
 
+		// Force-fix alpha of 0 to opaque.
+		if ((this.color & ColorUtil.ALPHA_MASK) == 0) {
+			this.color |= ColorUtil.ALPHA_MASK;
+		}
+
+		if (tag.contains("shadow_type", NbtElement.STRING_TYPE)) {
+			switch (ShadowType.valueOf(tag.getString("shadow_type"))) {
+				case NONE -> {
+					this.backgroundColor = 0;
+					this.shadow = false;
+				}
+				case PLATE -> {
+					this.backgroundColor = PLATE_BACKGROUND;
+					this.shadow = false;
+				}
+				default -> {
+					this.backgroundColor = 0;
+					this.shadow = true;
+				}
+			}
+		}
+
+		if (tag.contains("background_color", NbtElement.NUMBER_TYPE)) {
+			this.backgroundColor = tag.getInt("background_color");
+		}
+
+		if (tag.contains("shadow")) {
+			this.shadow = tag.getBoolean("shadow");
+		}
+
 		this.textAlignment = TextAlignment.valueOf(tag.getString("text_alignment"));
 		this.zOffset = ZOffset.valueOf(tag.getString("z_offset"));
-		this.shadowType = tag.contains("shadow_type") ? ShadowType.valueOf(tag.getString("shadow_type")) : ShadowType.DROP;
 		this.viewDistance = tag.contains("viewDistance") ? tag.getFloat("viewDistance") : -1.0F;
 
 		NbtList lines = tag.getList("lines", 8);
@@ -119,6 +154,7 @@ public class TextBlockEntity extends GlowcaseBlockEntity {
 		FRONT, CENTER, BACK
 	}
 
+	@Deprecated(forRemoval = true)
 	public enum ShadowType {
 		DROP, PLATE, NONE
 	}

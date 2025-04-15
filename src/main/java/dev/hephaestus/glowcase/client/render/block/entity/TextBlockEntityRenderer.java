@@ -122,13 +122,13 @@ public class TextBlockEntityRenderer extends BakedBlockEntityRenderer<TextBlockE
 			matrices.push();
 			matrices.translate(dX, 0, 0);
 
-			if (entity.shadowType == TextBlockEntity.ShadowType.PLATE && width > 0) {
+			if (entity.backgroundColor != 0 && width > 0) {
 				matrices.translate(0, 0, -0.025D);
-				drawFillRect(matrices, vertexConsumers, (int) width + 5, (i + 1) * 12 - 2, -5, i * 12 - 2, 0x44000000);
+				drawFillRect(matrices, vertexConsumers, (int) width + 5, (i + 1) * 12 - 2, -5, i * 12 - 2, entity.backgroundColor);
 				matrices.translate(0, 0, 0.025D);
 			}
 
-			textRenderer.draw(entity.lines.get(i), 0, i * 12, entity.color, entity.shadowType == TextBlockEntity.ShadowType.DROP, matrices.peek().getPositionMatrix(), vertexConsumers, TextLayerType.NORMAL, 0, LightmapTextureManager.MAX_LIGHT_COORDINATE);
+			textRenderer.draw(entity.lines.get(i), 0, i * 12, entity.color, entity.shadow, matrices.peek().getPositionMatrix(), vertexConsumers, TextLayerType.NORMAL, 0, LightmapTextureManager.MAX_LIGHT_COORDINATE);
 
 			matrices.pop();
 		}
