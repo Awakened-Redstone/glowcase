@@ -101,7 +101,8 @@ public class EmiClientUtils {
 
         try {
 			// getEffectVertexConsumers doesn't cause random rendering issues like getEntityVertexConsumers
-			DrawContext context = new DrawContext(client, SORRY.getEffectVertexConsumers());
+			// getEffectVertexConsumers caused random rendering issues, is the comment above inverted? - Awakened Redstone
+			DrawContext context = new DrawContext(client, SORRY.getEntityVertexConsumers());
 
 			Framebuffer background = createBackground(recipe, context);
 			renderFramebuffer(background, matrices, fullWidth, fullHeight);
