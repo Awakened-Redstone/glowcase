@@ -60,15 +60,22 @@ public class SuggestionListWidget<T> extends ClickableWidget {
 		}
 	}
 
+	public void updateSuggestions(List<T> newSuggestions, String filter) {
+		updateSuggestions(newSuggestions, filter, true);
+	}
+
 	// update the suggestion list based on filter
-    public void updateSuggestions(List<T> newSuggestions, String filter) {
+    public void updateSuggestions(List<T> newSuggestions, String filter, boolean strict) {
         suggestions.clear();
 		this.filter = filter;
 
         for (T suggestion : newSuggestions) {
+			if (suggestion == null) {
+				throw new NullPointerException("A suggestion can not be null!");
+			}
             String text = toStringFunction.apply(suggestion);
 
-            if (text.startsWith(filter)) {
+            if (strict ? text.startsWith(filter) : text.contains(filter)) {
                 suggestions.add(suggestion);
             }
         }

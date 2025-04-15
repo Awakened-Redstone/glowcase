@@ -37,6 +37,7 @@ import dev.hephaestus.glowcase.item.TabletItem;
 import dev.hephaestus.glowcase.item.component.CollectionComponent;
 import dev.hephaestus.glowcase.item.component.NoteComponent;
 import dev.hephaestus.glowcase.item.component.TabletComponents;
+import dev.hephaestus.glowcase.util.EmiUtils;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
 import net.fabricmc.loader.api.FabricLoader;
@@ -192,6 +193,13 @@ public class Glowcase implements ModInitializer {
 
 		if (FabricLoader.getInstance().isModLoaded("polydex2")) {
 			PolydexCompatibility.onInitialize();
+		}
+
+		// Never make this command available outside of dev
+		if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
+			if (FabricLoader.getInstance().isModLoaded("emi")) {
+				EmiUtils.registerDevCommands();
+			}
 		}
 	}
 }

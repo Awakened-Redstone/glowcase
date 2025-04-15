@@ -6,7 +6,7 @@ import dev.hephaestus.glowcase.client.GlowcaseClient;
 import dev.hephaestus.glowcase.Glowcase;
 import dev.hephaestus.glowcase.block.entity.RecipeBlockEntity;
 import dev.hephaestus.glowcase.client.util.BlockEntityRenderUtil;
-import dev.hephaestus.glowcase.util.EmiClientUtils;
+import dev.hephaestus.glowcase.util.EmiWorldRenderUtils;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.block.entity.BlockEntityRenderer;
 import net.minecraft.client.render.block.entity.BlockEntityRendererFactory;
@@ -36,7 +36,7 @@ public record RecipeBlockEntityRenderer(BlockEntityRendererFactory.Context conte
 				case CENTER -> matrices.translate(0D, 0D, 0D);
 			}
 
-			boolean rendered = EmiClientUtils.renderRecipe(matrices, entity.recipe, entity.getPos());
+			boolean rendered = EmiWorldRenderUtils.renderRecipe(matrices, entity.recipe, entity.getPos());
 			matrices.pop();
 			if (rendered) return;
 		}
