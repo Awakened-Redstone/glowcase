@@ -1,7 +1,7 @@
 package dev.hephaestus.glowcase.block.entity;
 
 import dev.hephaestus.glowcase.client.GlowcaseClient;
-import dev.hephaestus.glowcase.util.EmiClientUtils;
+import dev.hephaestus.glowcase.client.util.EmiClientUtils;
 
 import dev.hephaestus.glowcase.Glowcase;
 import net.fabricmc.api.EnvType;

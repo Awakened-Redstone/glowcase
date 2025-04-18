@@ -1,8 +1,9 @@
-package dev.hephaestus.glowcase.util;
+package dev.hephaestus.glowcase.client.util;
 
 import com.google.common.collect.Lists;
 import dev.emi.emi.api.widget.Widget;
 import dev.emi.emi.api.widget.WidgetHolder;
+import dev.hephaestus.glowcase.util.RequiresEmiLoaded;
 
 import java.util.List;
 

@@ -4,6 +4,8 @@ import dev.emi.emi.api.EmiApi;
 import dev.emi.emi.api.recipe.EmiRecipe;
 import dev.emi.emi.api.widget.Widget;
 import dev.emi.emi.widget.RecipeBackground;
+import dev.hephaestus.glowcase.util.EmiUtils;
+import dev.hephaestus.glowcase.util.RequiresEmiLoaded;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.util.Identifier;
 

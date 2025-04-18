@@ -1,4 +1,4 @@
-package dev.hephaestus.glowcase.util;
+package dev.hephaestus.glowcase.client.util;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.systems.VertexSorter;
