@@ -28,7 +28,7 @@ import dev.hephaestus.glowcase.item.ScrollableItem;
 import dev.hephaestus.glowcase.mixin.HandledScreenInvoker;
 import dev.hephaestus.glowcase.packet.C2SSlotScrolled;
 import dev.hephaestus.glowcase.util.EmiUtils;
-import dev.hephaestus.glowcase.util.EmiWorldRenderUtils;
+import dev.hephaestus.glowcase.client.util.EmiWorldRenderUtils;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -52,8 +52,6 @@ import net.minecraft.resource.ResourceType;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.util.Identifier;
-
-import java.util.List;
 
 public class GlowcaseClient implements ClientModInitializer {
 	public static final Boolean EMI_LOADED = FabricLoader.getInstance().isModLoaded("emi");

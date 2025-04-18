@@ -6,7 +6,7 @@ import dev.hephaestus.glowcase.client.GlowcaseClient;
 import dev.hephaestus.glowcase.Glowcase;
 import dev.hephaestus.glowcase.block.entity.RecipeBlockEntity;
 import dev.hephaestus.glowcase.client.util.BlockEntityRenderUtil;
-import dev.hephaestus.glowcase.util.EmiWorldRenderUtils;
+import dev.hephaestus.glowcase.client.util.EmiWorldRenderUtils;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.block.entity.BlockEntityRenderer;
 import net.minecraft.client.render.block.entity.BlockEntityRendererFactory;
