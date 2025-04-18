@@ -110,7 +110,7 @@ public class GlowcaseClient implements ClientModInitializer {
 			Glowcase.COLLECTION_CASE_ITEM.get()
 		);
 
-		WorldRenderEvents.AFTER_TRANSLUCENT.register(BakedBlockEntityRenderer.Manager::render);
+		WorldRenderEvents.AFTER_ENTITIES.register(BakedBlockEntityRenderer.Manager::render);
 		InvalidateRenderStateCallback.EVENT.register(BakedBlockEntityRenderer.Manager::reset);
 
 		ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(new NoteTextColorResource());
