@@ -1,4 +1,4 @@
-package dev.hephaestus.glowcase.util;
+package dev.hephaestus.glowcase.client.util;
 
 import dev.emi.emi.api.EmiApi;
 import dev.emi.emi.api.recipe.EmiRecipe;
