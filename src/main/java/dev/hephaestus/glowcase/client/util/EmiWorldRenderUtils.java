@@ -8,6 +8,7 @@ import dev.emi.emi.api.recipe.EmiRecipeCategory;
 import dev.emi.emi.api.widget.Widget;
 import dev.emi.emi.widget.RecipeBackground;
 import dev.hephaestus.glowcase.Glowcase;
+import dev.hephaestus.glowcase.client.GlowcaseClient;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.gl.SimpleFramebuffer;
@@ -111,7 +112,7 @@ public class EmiWorldRenderUtils {
 			DrawContext context = new DrawContext(client, SORRY.getEntityVertexConsumers());
 
 			// Render the background separate, it is cached and saves some FPS
-			Framebuffer background = createBackground(recipe, context);
+			Framebuffer background = createBackgroundBuffer(recipe, context);
 			renderFramebuffer(background, matrices, fullWidth, fullHeight);
 
 			// Calculate frame time based on distance
@@ -125,7 +126,7 @@ public class EmiWorldRenderUtils {
 			}
 
 			// Render the recipe
-			Framebuffer foreground = createFramebuffer(recipe, context, frameTime);
+			Framebuffer foreground = createRecipeBuffer(recipe, context, frameTime);
 			renderFramebuffer(foreground, matrices, fullWidth, fullHeight);
 		} catch (Exception e) {
 			Glowcase.LOGGER.error("Error rendering framebuffer!", e);
@@ -196,7 +197,7 @@ public class EmiWorldRenderUtils {
 		framebuffer.endRead();
 	}
 
-	private static Framebuffer createBackground(EmiRecipe recipe, DrawContext context) {
+	private static Framebuffer createBackgroundBuffer(EmiRecipe recipe, DrawContext context) {
 		int width = recipe.getDisplayWidth() + 8;
 		int height = recipe.getDisplayHeight() + 8;
 
@@ -241,7 +242,7 @@ public class EmiWorldRenderUtils {
 		}).framebuffer;
 	}
 
-	private static Framebuffer createFramebuffer(EmiRecipe recipe, DrawContext context, int frameTime) {
+	private static Framebuffer createRecipeBuffer(EmiRecipe recipe, DrawContext context, int frameTime) {
 		MinecraftClient client = MinecraftClient.getInstance();
 
 		int width = recipe.getDisplayWidth() + 8;
@@ -266,6 +267,7 @@ public class EmiWorldRenderUtils {
 		Framebuffer framebuffer = cached.framebuffer;
 
 		try {
+			GlowcaseClient.PREVENT_VEIL_DYNAMIC_BUFFER.push(null);
 			framebuffer.clear(MinecraftClient.IS_SYSTEM_MAC);
 			framebuffer.beginWrite(true);
 
@@ -324,6 +326,8 @@ public class EmiWorldRenderUtils {
 
 			// if an error occurs during framebuffer creation, mark the cache as dirty to refresh
 			cached.setDirty(true);
+		} finally {
+			GlowcaseClient.PREVENT_VEIL_DYNAMIC_BUFFER.pop();
 		}
 
 		return framebuffer;
