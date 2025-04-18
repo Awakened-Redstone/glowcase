@@ -1,6 +1,7 @@
 package dev.hephaestus.glowcase.client;
 
 import java.util.List;
+import java.util.Stack;
 
 import com.google.common.collect.Lists;
 
@@ -44,6 +45,8 @@ public class GlowcaseClient implements ClientModInitializer {
 	public static final Boolean EMI_LOADED = FabricLoader.getInstance().isModLoaded("emi");
 	public static final ScreenImageCache screenImageCache = new ScreenImageCache();
 	public static final Identifier PROVIDER_CROSSHAIR_TEXTURE = Glowcase.id("hud/provider_crosshair");
+	// Use a stack so it can be more freely used if needed in more places
+	public static final Stack<Void> PREVENT_VEIL_DYNAMIC_BUFFER = new Stack<>();
 
 	private double accScroll = 0;
 
