@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.At;
 @Pseudo // Maybe replace this with a mixin plugin
 @Environment(EnvType.CLIENT)
 @Mixin(value = DynamicBufferShard.class, remap = false)
-public class VeilLevelPerspectiveRendererCompatMixin {
+public class DynamicBufferShardCompatMixin {
 	@WrapOperation(at = @At(value = "INVOKE", target = "Lfoundry/veil/api/client/render/VeilLevelPerspectiveRenderer;isRenderingPerspective()Z"), method = "lambda$new$0")
 	private static boolean stopVeilFromBreakingEmiBlockRendering(Operation<Boolean> original) {
 		if (!GlowcaseClient.PREVENT_VEIL_DYNAMIC_BUFFER.empty()) {
