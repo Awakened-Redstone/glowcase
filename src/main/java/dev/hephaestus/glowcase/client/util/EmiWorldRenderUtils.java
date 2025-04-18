@@ -32,7 +32,7 @@ public class EmiWorldRenderUtils {
 	private static final Map<EmiRecipe, CachedBuffer> FRAMEBUFFER_CACHE = new ConcurrentHashMap<>();
 	private static final Map<EmiRecipe, GlowcaseWidgetHolder> HOLDER_CACHE = new ConcurrentHashMap<>();
 	private static final Map<Identifier, EmiRecipe> RECIPE_CACHE = new ConcurrentHashMap<>();
-	private static final boolean GET_ERROR = MinecraftClient.IS_SYSTEM_MAC;
+	private static final boolean IS_MAC = MinecraftClient.IS_SYSTEM_MAC;
 
 	// a container to hold the buffer
 	private static class CachedBuffer {
@@ -61,22 +61,28 @@ public class EmiWorldRenderUtils {
 			this.dirty = false;
 			this.expire = System.currentTimeMillis() + frameTime;
 		}
+
+		public void delete() {
+			expire = Long.MAX_VALUE;
+			dirty = false;
+			framebuffer.delete();
+		}
 	}
 
 	public static void disposeCache() {
-        for (CachedBuffer cached : FRAMEBUFFER_CACHE.values()) {
+        for (CachedBuffer cache : FRAMEBUFFER_CACHE.values()) {
             try {
-                cached.framebuffer.delete();
+                cache.delete();
             } catch (Exception e) {
-                Glowcase.LOGGER.error("Error disposing: " + e.getMessage());
+                Glowcase.LOGGER.error("Failed to dispose recipe frame buffer! This may result in a memory leak!", e);
             }
         }
 
-		for (CachedBuffer cached : BACKGROUND_CACHE.values()) {
+		for (CachedBuffer cache : BACKGROUND_CACHE.values()) {
             try {
-                cached.framebuffer.delete();
+                cache.delete();
             } catch (Exception e) {
-                Glowcase.LOGGER.error("Error disposing: " + e.getMessage());
+                Glowcase.LOGGER.error("Failed to dispose recipe background buffer! This may result in a memory leak!", e);
             }
         }
 
@@ -90,6 +96,13 @@ public class EmiWorldRenderUtils {
         for (CachedBuffer cached : FRAMEBUFFER_CACHE.values()) {
             cached.setDirty(true);
         }
+
+        for (CachedBuffer cached : BACKGROUND_CACHE.values()) {
+            cached.setDirty(true);
+        }
+
+		HOLDER_CACHE.clear();
+		RECIPE_CACHE.clear();
     }
 
 	public static boolean renderRecipe(MatrixStack matrices, String recipeString, BlockPos pos) {
@@ -111,7 +124,7 @@ public class EmiWorldRenderUtils {
 			DrawContext context = new DrawContext(client, SORRY.getEntityVertexConsumers());
 
 			// Render the background separate, it is cached and saves some FPS
-			Framebuffer background = createBackground(recipe, context);
+			Framebuffer background = createBackgroundBuffer(recipe, context);
 			renderFramebuffer(background, matrices, fullWidth, fullHeight);
 
 			// Calculate frame time based on distance
@@ -125,7 +138,7 @@ public class EmiWorldRenderUtils {
 			}
 
 			// Render the recipe
-			Framebuffer foreground = createFramebuffer(recipe, context, frameTime);
+			Framebuffer foreground = createRecipeBuffer(recipe, context, frameTime);
 			renderFramebuffer(foreground, matrices, fullWidth, fullHeight);
         } catch (Exception e) {
             Glowcase.LOGGER.error("Error rendering framebuffer!", e);
@@ -196,12 +209,12 @@ public class EmiWorldRenderUtils {
 		framebuffer.endRead();
 	}
 
-	private static Framebuffer createBackground(EmiRecipe recipe, DrawContext context) {
+	private static Framebuffer createBackgroundBuffer(EmiRecipe recipe, DrawContext context) {
 		int width = recipe.getDisplayWidth() + 8;
 		int height = recipe.getDisplayHeight() + 8;
 
 		return BACKGROUND_CACHE.computeIfAbsent(new Vector2i(recipe.getDisplayWidth(), recipe.getDisplayHeight()), ignored -> {
-			SimpleFramebuffer framebuffer = new SimpleFramebuffer(width, height, true, GET_ERROR);
+			SimpleFramebuffer framebuffer = new SimpleFramebuffer(width, height, true, IS_MAC);
 
 			Matrix4fStack view = RenderSystem.getModelViewStack();
 			view.pushMatrix();
@@ -241,7 +254,7 @@ public class EmiWorldRenderUtils {
 		}).framebuffer;
 	}
 
-	private static Framebuffer createFramebuffer(EmiRecipe recipe, DrawContext context, int frameTime) {
+	private static Framebuffer createRecipeBuffer(EmiRecipe recipe, DrawContext context, int frameTime) {
 		MinecraftClient client = MinecraftClient.getInstance();
 
 		int width = recipe.getDisplayWidth() + 8;
@@ -293,9 +306,6 @@ public class EmiWorldRenderUtils {
 
 			context.getMatrices().translate(4, 4, 0);
 
-			//Widget widget = holder.widgets.get(Math.min(2, holder.widgets.size()));
-			//widget.render(context, -9999, -9999, 0);
-
 			for (Widget widget : holder.getWidgets()) {
 				widget.render(context, -9999, -9999, 0);
 			}
@@ -305,6 +315,7 @@ public class EmiWorldRenderUtils {
 			RenderSystem.disableBlend();
 			RenderSystem.enableCull();
 			RenderSystem.setShaderColor(1, 1, 1, 1);
+
 			// Using disableForLevel fixes a severe light flicker issue
 			DiffuseLighting.disableForLevel();
 
@@ -315,10 +326,11 @@ public class EmiWorldRenderUtils {
 
 			framebuffer.endWrite();
 			RenderSystem.setShaderFogEnd(originalFogEnd);
+
 			client.getFramebuffer().beginWrite(true);
 
 			//cached.dirty = true;
-			 cached.setDirty(frameTime);
+			cached.setDirty(frameTime);
 		} catch (Exception e) {
 			Glowcase.LOGGER.error("Error during framebuffer creation!", e);
 

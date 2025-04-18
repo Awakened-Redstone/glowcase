@@ -4,8 +4,8 @@
 	"package": "dev.hephaestus.glowcase.mixin",
 	"compatibilityLevel": "JAVA_21",
 	"mixins": [
-		"LockableContainerBlockEntityAccessor",
 		"ContainerLockMixin",
+		"LockableContainerBlockEntityAccessor",
 		"PlayerEntityMixin"
 	],
 	"client": [
