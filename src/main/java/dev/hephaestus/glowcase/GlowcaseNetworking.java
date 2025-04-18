@@ -1,21 +1,22 @@
 package dev.hephaestus.glowcase;
 
 import dev.hephaestus.glowcase.item.ScrollableItem;
+import dev.hephaestus.glowcase.packet.C2SEditConfigLinkBlock;
+import dev.hephaestus.glowcase.packet.C2SEditEntityDisplayBlock;
 import dev.hephaestus.glowcase.packet.C2SEditHyperlinkBlock;
 import dev.hephaestus.glowcase.packet.C2SEditItemAcceptorBlock;
 import dev.hephaestus.glowcase.packet.C2SEditItemDisplayBlock;
+import dev.hephaestus.glowcase.packet.C2SEditItemProviderBlock;
 import dev.hephaestus.glowcase.packet.C2SEditNoteItem;
 import dev.hephaestus.glowcase.packet.C2SEditOutlineBlock;
 import dev.hephaestus.glowcase.packet.C2SEditParticleDisplayBlock;
 import dev.hephaestus.glowcase.packet.C2SEditPopupBlock;
 import dev.hephaestus.glowcase.packet.C2SEditRecipeBlock;
+import dev.hephaestus.glowcase.packet.C2SEditScreenBlock;
 import dev.hephaestus.glowcase.packet.C2SEditSoundBlock;
 import dev.hephaestus.glowcase.packet.C2SEditSpriteBlock;
-import dev.hephaestus.glowcase.packet.C2SEditTextBlock;
-import dev.hephaestus.glowcase.packet.C2SEditScreenBlock;
-import dev.hephaestus.glowcase.packet.C2SEditItemProviderBlock;
 import dev.hephaestus.glowcase.packet.C2SEditTabletItem;
-import dev.hephaestus.glowcase.packet.C2SEditEntityDisplayBlock;
+import dev.hephaestus.glowcase.packet.C2SEditTextBlock;
 import dev.hephaestus.glowcase.packet.C2SSlotScrolled;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -27,6 +28,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 public class GlowcaseNetworking {
 	public static void init() {
 		PayloadTypeRegistry.playC2S().register(C2SEditHyperlinkBlock.ID, C2SEditHyperlinkBlock.PACKET_CODEC);
+		PayloadTypeRegistry.playC2S().register(C2SEditConfigLinkBlock.ID, C2SEditConfigLinkBlock.PACKET_CODEC);
 		PayloadTypeRegistry.playC2S().register(C2SEditItemDisplayBlock.ID, C2SEditItemDisplayBlock.PACKET_CODEC);
 		PayloadTypeRegistry.playC2S().register(C2SEditTextBlock.ID, C2SEditTextBlock.PACKET_CODEC);
 		PayloadTypeRegistry.playC2S().register(C2SEditPopupBlock.ID, C2SEditPopupBlock.PACKET_CODEC);
@@ -44,6 +46,7 @@ public class GlowcaseNetworking {
 		PayloadTypeRegistry.playC2S().register(C2SSlotScrolled.ID, C2SSlotScrolled.PACKET_CODEC);
 
 		ServerPlayNetworking.registerGlobalReceiver(C2SEditHyperlinkBlock.ID, C2SEditHyperlinkBlock::receive);
+		ServerPlayNetworking.registerGlobalReceiver(C2SEditConfigLinkBlock.ID, C2SEditConfigLinkBlock::receive);
 		ServerPlayNetworking.registerGlobalReceiver(C2SEditItemDisplayBlock.ID, C2SEditItemDisplayBlock::receive);
 		ServerPlayNetworking.registerGlobalReceiver(C2SEditTextBlock.ID, C2SEditTextBlock::receive);
 		ServerPlayNetworking.registerGlobalReceiver(C2SEditPopupBlock.ID, C2SEditPopupBlock::receive);

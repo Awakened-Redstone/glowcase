@@ -3,6 +3,7 @@ package dev.hephaestus.glowcase;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.mojang.datafixers.util.Pair;
+import dev.hephaestus.glowcase.block.ConfigLinkBlock;
 import dev.hephaestus.glowcase.block.EntityDisplayBlock;
 import dev.hephaestus.glowcase.block.HyperlinkBlock;
 import dev.hephaestus.glowcase.block.ItemAcceptorBlock;
@@ -16,6 +17,7 @@ import dev.hephaestus.glowcase.block.ScreenBlock;
 import dev.hephaestus.glowcase.block.SoundPlayerBlock;
 import dev.hephaestus.glowcase.block.SpriteBlock;
 import dev.hephaestus.glowcase.block.TextBlock;
+import dev.hephaestus.glowcase.block.entity.ConfigLinkBlockEntity;
 import dev.hephaestus.glowcase.block.entity.EntityDisplayBlockEntity;
 import dev.hephaestus.glowcase.block.entity.HyperlinkBlockEntity;
 import dev.hephaestus.glowcase.block.entity.ItemAcceptorBlockEntity;
@@ -76,6 +78,10 @@ public class Glowcase implements ModInitializer {
 	public static final Supplier<HyperlinkBlock> HYPERLINK_BLOCK = registerBlock("hyperlink_block", HyperlinkBlock::new);
 	public static final Supplier<BlockItem> HYPERLINK_BLOCK_ITEM = registerItem("hyperlink_block", () -> new BlockItem(HYPERLINK_BLOCK.get(), new Item.Settings().maxCount(1)));
 	public static final Supplier<BlockEntityType<HyperlinkBlockEntity>> HYPERLINK_BLOCK_ENTITY = registerBlockEntity("hyperlink_block", () -> BlockEntityType.Builder.create(HyperlinkBlockEntity::new, HYPERLINK_BLOCK.get()).build(null));
+
+	public static final Supplier<ConfigLinkBlock> CONFIG_LINK_BLOCK = registerBlock("config_link_block", ConfigLinkBlock::new);
+	public static final Supplier<BlockItem> CONFIG_LINK_BLOCK_ITEM = registerItem("config_link_block", () -> new BlockItem(CONFIG_LINK_BLOCK.get(), new Item.Settings().maxCount(1)));
+	public static final Supplier<BlockEntityType<ConfigLinkBlockEntity>> CONFIG_LINK_BLOCK_ENTITY = registerBlockEntity("config_link_block", () -> BlockEntityType.Builder.create(ConfigLinkBlockEntity::new, CONFIG_LINK_BLOCK.get()).build(null));
 
 	public static final Supplier<ItemDisplayBlock> ITEM_DISPLAY_BLOCK = registerBlock("item_display_block", ItemDisplayBlock::new);
 	public static final Supplier<BlockItem> ITEM_DISPLAY_BLOCK_ITEM = registerItem("item_display_block", () -> new BlockItem(ITEM_DISPLAY_BLOCK.get(), new Item.Settings().maxCount(1)));
@@ -152,6 +158,7 @@ public class Glowcase implements ModInitializer {
 			entries.add(SCREEN_BLOCK_ITEM.get());
 			entries.add(OUTLINE_BLOCK_ITEM.get());
 			entries.add(HYPERLINK_BLOCK_ITEM.get());
+			entries.add(CONFIG_LINK_BLOCK_ITEM.get());
 			entries.add(POPUP_BLOCK_ITEM.get());
 			entries.add(ITEM_PROVIDER_BLOCK_ITEM.get());
 			entries.add(ITEM_ACCEPTOR_BLOCK_ITEM.get());

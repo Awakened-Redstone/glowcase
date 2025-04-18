@@ -4,19 +4,31 @@ import java.util.List;
 import java.util.Stack;
 
 import com.google.common.collect.Lists;
-
 import dev.hephaestus.glowcase.Glowcase;
-import dev.hephaestus.glowcase.client.render.block.entity.*;
+import dev.hephaestus.glowcase.client.render.block.entity.BakedBlockEntityRenderer;
+import dev.hephaestus.glowcase.client.render.block.entity.ConfigLinkBlockEntityRenderer;
+import dev.hephaestus.glowcase.client.render.block.entity.EntityDisplayBlockEntityRenderer;
+import dev.hephaestus.glowcase.client.render.block.entity.HyperlinkBlockEntityRenderer;
+import dev.hephaestus.glowcase.client.render.block.entity.ItemAcceptorBlockEntityRenderer;
+import dev.hephaestus.glowcase.client.render.block.entity.ItemDisplayBlockEntityRenderer;
+import dev.hephaestus.glowcase.client.render.block.entity.ItemProviderBlockEntityRenderer;
+import dev.hephaestus.glowcase.client.render.block.entity.OutlineBlockEntityRenderer;
+import dev.hephaestus.glowcase.client.render.block.entity.ParticleDisplayBlockEntityRenderer;
+import dev.hephaestus.glowcase.client.render.block.entity.PopupBlockEntityRenderer;
+import dev.hephaestus.glowcase.client.render.block.entity.RecipeBlockEntityRenderer;
+import dev.hephaestus.glowcase.client.render.block.entity.ScreenBlockEntityRenderer;
+import dev.hephaestus.glowcase.client.render.block.entity.SoundPlayerBlockEntityRenderer;
+import dev.hephaestus.glowcase.client.render.block.entity.SpriteBlockEntityRenderer;
+import dev.hephaestus.glowcase.client.render.block.entity.TextBlockEntityRenderer;
 import dev.hephaestus.glowcase.client.render.item.ItemHandRenderer;
 import dev.hephaestus.glowcase.client.render.item.NoteItemHandRenderer;
-import dev.hephaestus.glowcase.client.render.block.entity.RecipeBlockEntityRenderer;
 import dev.hephaestus.glowcase.client.render.item.TabletItemHandRenderer;
 import dev.hephaestus.glowcase.client.util.NoteTextColorResource;
 import dev.hephaestus.glowcase.item.ScrollableItem;
 import dev.hephaestus.glowcase.mixin.HandledScreenInvoker;
 import dev.hephaestus.glowcase.packet.C2SSlotScrolled;
 import dev.hephaestus.glowcase.util.EmiUtils;
-import dev.hephaestus.glowcase.client.util.EmiWorldRenderUtils;
+import dev.hephaestus.glowcase.util.EmiWorldRenderUtils;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -29,17 +41,19 @@ import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.mixin.object.builder.client.ModelPredicateProviderRegistryAccessor;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
+import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.render.block.entity.BlockEntityRendererFactories;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.NbtComponent;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.resource.ResourceType;
+import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.util.Identifier;
-import net.minecraft.item.ItemStack;
-import net.minecraft.screen.ScreenHandler;
+
+import java.util.List;
 
 public class GlowcaseClient implements ClientModInitializer {
 	public static final Boolean EMI_LOADED = FabricLoader.getInstance().isModLoaded("emi");
@@ -56,6 +70,7 @@ public class GlowcaseClient implements ClientModInitializer {
 
 		BlockEntityRendererFactories.register(Glowcase.TEXT_BLOCK_ENTITY.get(), TextBlockEntityRenderer::new);
 		BlockEntityRendererFactories.register(Glowcase.HYPERLINK_BLOCK_ENTITY.get(), HyperlinkBlockEntityRenderer::new);
+		BlockEntityRendererFactories.register(Glowcase.CONFIG_LINK_BLOCK_ENTITY.get(), ConfigLinkBlockEntityRenderer::new);
 		BlockEntityRendererFactories.register(Glowcase.ITEM_DISPLAY_BLOCK_ENTITY.get(), ItemDisplayBlockEntityRenderer::new);
 		BlockEntityRendererFactories.register(Glowcase.POPUP_BLOCK_ENTITY.get(), PopupBlockEntityRenderer::new);
 		BlockEntityRendererFactories.register(Glowcase.SCREEN_BLOCK_ENTITY.get(), ScreenBlockEntityRenderer::new);
@@ -83,6 +98,7 @@ public class GlowcaseClient implements ClientModInitializer {
 			},
 			Glowcase.TEXT_BLOCK_ITEM.get(),
 			Glowcase.HYPERLINK_BLOCK_ITEM.get(),
+			Glowcase.CONFIG_LINK_BLOCK_ITEM.get(),
 			Glowcase.ITEM_DISPLAY_BLOCK_ITEM.get(),
 			Glowcase.POPUP_BLOCK_ITEM.get(),
 			Glowcase.SCREEN_BLOCK_ITEM.get(),

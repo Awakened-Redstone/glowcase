@@ -1,14 +1,59 @@
 package dev.hephaestus.glowcase.client;
 
 import dev.hephaestus.glowcase.GlowcaseCommonProxy;
-import dev.hephaestus.glowcase.block.entity.*;
-import dev.hephaestus.glowcase.client.gui.screen.ingame.*;
+import dev.hephaestus.glowcase.block.entity.ConfigLinkBlockEntity;
+import dev.hephaestus.glowcase.block.entity.EntityDisplayBlockEntity;
+import dev.hephaestus.glowcase.block.entity.HyperlinkBlockEntity;
+import dev.hephaestus.glowcase.block.entity.ItemAcceptorBlockEntity;
+import dev.hephaestus.glowcase.block.entity.ItemDisplayBlockEntity;
+import dev.hephaestus.glowcase.block.entity.ItemProviderBlockEntity;
+import dev.hephaestus.glowcase.block.entity.OutlineBlockEntity;
+import dev.hephaestus.glowcase.block.entity.ParticleDisplayBlockEntity;
+import dev.hephaestus.glowcase.block.entity.PopupBlockEntity;
+import dev.hephaestus.glowcase.block.entity.RecipeBlockEntity;
+import dev.hephaestus.glowcase.block.entity.ScreenBlockEntity;
+import dev.hephaestus.glowcase.block.entity.SoundPlayerBlockEntity;
+import dev.hephaestus.glowcase.block.entity.SpriteBlockEntity;
+import dev.hephaestus.glowcase.block.entity.TextBlockEntity;
+import dev.hephaestus.glowcase.client.gui.screen.ingame.ConfigLinkBlockEditScreen;
+import dev.hephaestus.glowcase.client.gui.screen.ingame.EntityDisplayEditScreen;
+import dev.hephaestus.glowcase.client.gui.screen.ingame.HyperlinkBlockEditScreen;
+import dev.hephaestus.glowcase.client.gui.screen.ingame.ItemAcceptorBlockEditScreen;
+import dev.hephaestus.glowcase.client.gui.screen.ingame.ItemDisplayEditScreen;
+import dev.hephaestus.glowcase.client.gui.screen.ingame.ItemProviderBlockEditScreen;
+import dev.hephaestus.glowcase.client.gui.screen.ingame.NoteEditScreen;
+import dev.hephaestus.glowcase.client.gui.screen.ingame.OutlineBlockEditScreen;
+import dev.hephaestus.glowcase.client.gui.screen.ingame.ParticleDisplayEditScreen;
+import dev.hephaestus.glowcase.client.gui.screen.ingame.PopupBlockEditScreen;
+import dev.hephaestus.glowcase.client.gui.screen.ingame.PopupBlockViewScreen;
+import dev.hephaestus.glowcase.client.gui.screen.ingame.RecipeBlockEditScreen;
+import dev.hephaestus.glowcase.client.gui.screen.ingame.ScreenBlockEditScreen;
+import dev.hephaestus.glowcase.client.gui.screen.ingame.SoundPlayerBlockEditScreen;
+import dev.hephaestus.glowcase.client.gui.screen.ingame.SpriteBlockEditScreen;
+import dev.hephaestus.glowcase.client.gui.screen.ingame.TabletEditScreen;
+import dev.hephaestus.glowcase.client.gui.screen.ingame.TextBlockEditScreen;
+import dev.hephaestus.glowcase.client.util.ConfigLinkClientUtil;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ConfirmLinkScreen;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
 
 public class GlowcaseClientProxy extends GlowcaseCommonProxy {
+
+	@Override
+	public void openConfigLinkBlockEditScreen(BlockPos pos) {
+		MinecraftClient client = MinecraftClient.getInstance();
+		if (client.world != null && client.world.getBlockEntity(pos) instanceof ConfigLinkBlockEntity be) {
+			MinecraftClient.getInstance().setScreen(new ConfigLinkBlockEditScreen(be));
+		}
+	}
+
+	@Override
+	public void openConfigScreen(String link) {
+		MinecraftClient client = MinecraftClient.getInstance();
+		client.setScreen(ConfigLinkClientUtil.getConfigScreen(client, link));
+	}
+
 	@Override
 	public void openHyperlinkBlockEditScreen(BlockPos pos) {
 		MinecraftClient client = MinecraftClient.getInstance();

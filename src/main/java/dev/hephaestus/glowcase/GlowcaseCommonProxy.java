@@ -4,6 +4,15 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
 
 public class GlowcaseCommonProxy {
+
+	public void openConfigLinkBlockEditScreen(BlockPos pos) {
+		//No-op
+	}
+
+	public void openConfigScreen(String link) {
+		// No-op
+	}
+
 	public void openHyperlinkBlockEditScreen(BlockPos pos) {
 		//No-op
 	}

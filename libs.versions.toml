@@ -12,6 +12,7 @@ fapi = "0.115.4+1.21.1"
 placeholder = "2.4.0+1.21"
 polydex = "1.2.2+1.21"
 emi = "1.1.19+1.21.1"
+modmenu = "11.0.3"
 
 [plugins]
 loom = { id = "fabric-loom", version.ref = "loom" }
@@ -28,3 +29,4 @@ polydex = { group = "eu.pb4", name = "polydex", version.ref = "polydex" }
 kaleidoConfig = { group = "folk.sisby", name = "kaleido-config", version.ref = "kaleidoConfig" }
 
 emi = { group = "dev.emi", name = "emi-fabric", version.ref = "emi" }
+modmenu = { group = "com.terraformersmc", name = "modmenu", version.ref = "modmenu" }

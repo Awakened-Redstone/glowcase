@@ -39,6 +39,9 @@ dependencies {
 	modCompileOnly libs.emi
 	modLocalRuntime libs.emi
 
+	modCompileOnly libs.modmenu
+	modLocalRuntime libs.modmenu
+
 	modCompileOnly("foundry.veil:veil-fabric-1.21.1:1.0.0.228") {
 		exclude group: "maven.modrinth"
 		exclude group: "me.fallenbreath"

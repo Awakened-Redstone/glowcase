@@ -18,6 +18,7 @@ import java.util.UUID;
 public class ItemProviderBlockEntity extends GlowcaseBlockEntity implements InfiniteInventory, StackInteractable {
 	protected ItemStack stack = ItemStack.EMPTY;
 	protected GivesItem givesItem = GivesItem.ALWAYS;
+	protected boolean invisible = false;
 	public long cooldown = 0;
 	protected final Map<UUID, Long> givenTimes = new HashMap<>();
 
@@ -52,6 +53,10 @@ public class ItemProviderBlockEntity extends GlowcaseBlockEntity implements Infi
 		return givesItem;
 	}
 
+	public boolean isInvisible() {
+		return this.invisible;
+	}
+
 	public void setGivesItem(GivesItem givesItem) {
 		this.givesItem = givesItem;
 		markDirty();
@@ -66,6 +71,7 @@ public class ItemProviderBlockEntity extends GlowcaseBlockEntity implements Infi
 		NbtCompound timesNbt = new NbtCompound();
 		givenTimes.forEach((id, tick) -> timesNbt.putLong(id.toString(), tick));
 		tag.put("given_times", timesNbt);
+		tag.putBoolean("invisible", this.invisible);
 	}
 
 	@Override
@@ -84,6 +90,8 @@ public class ItemProviderBlockEntity extends GlowcaseBlockEntity implements Infi
 		for (String key : given.getKeys()) {
 			givenTimes.put(UUID.fromString(key), given.getLong(key));
 		}
+
+		this.invisible = tag.getBoolean("invisible");
 	}
 
 	public void cycleGiveType() {
@@ -115,7 +123,10 @@ public class ItemProviderBlockEntity extends GlowcaseBlockEntity implements Infi
 			itemStack.increment(getStack().getCount());
 			itemStack.capCount(itemStack.getMaxCount());
 			player.setStackInHand(Hand.MAIN_HAND, itemStack);
+		} else {
+			return;
 		}
+
 		if (!player.isCreative()) {
 			givenTimes.put(player.getUuid(), world.getTime());
 			markDirty();
