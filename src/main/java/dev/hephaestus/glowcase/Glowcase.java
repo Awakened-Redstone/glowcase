@@ -164,7 +164,7 @@ public class Glowcase implements ModInitializer {
 	);
 
 	public static Identifier id(String... path) {
-		return Identifier.of(MODID, String.join(".", path));
+		return Identifier.of(MODID, String.join("/", path));
 	}
 
 	public static <T extends Block> Supplier<T> registerBlock(String path, Function<Block.Settings, T> supplier) {
