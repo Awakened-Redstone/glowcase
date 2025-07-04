@@ -2,38 +2,40 @@ package dev.hephaestus.glowcase.item;
 
 import dev.hephaestus.glowcase.Glowcase;
 import dev.hephaestus.glowcase.item.component.NoteComponent;
+import net.minecraft.component.type.TooltipDisplayComponent;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.tooltip.TooltipType;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
+import net.minecraft.util.ActionResult;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
-import net.minecraft.util.TypedActionResult;
 import net.minecraft.world.World;
 
-import java.util.List;
+import java.util.function.Consumer;
 
 public class NoteItem extends Item {
 	public NoteItem(Settings settings) {
 		super(settings);
 	}
 
+
 	@Override
-	public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
+	public ActionResult use(World world, PlayerEntity user, Hand hand) {
 		ItemStack stackInHand = user.getStackInHand(hand);
 
 		NoteComponent noteComponent = stackInHand.get(Glowcase.NOTE_COMPONENT.get());
 
 		// Only edit when not signed
 		if (noteComponent != null && noteComponent.title().isPresent())
-			return TypedActionResult.pass(stackInHand);
+			return ActionResult.PASS;
 
 		if (world.isClient())
 			Glowcase.proxy.openNoteEditScreen(stackInHand);
 
-		return TypedActionResult.success(stackInHand);
+		return ActionResult.SUCCESS;
 	}
 
 	@Override
@@ -48,7 +50,7 @@ public class NoteItem extends Item {
 	}
 
 	@Override
-	public void appendTooltip(ItemStack itemStack, Item.TooltipContext context, List<Text> tooltip, TooltipType options) {
+	public void appendTooltip(ItemStack itemStack, TooltipContext context, TooltipDisplayComponent displayComponent, Consumer<Text> textConsumer, TooltipType type) {
 		boolean signed = false;
 
 		if (itemStack.contains(Glowcase.NOTE_COMPONENT.get())) {
@@ -57,15 +59,14 @@ public class NoteItem extends Item {
 
 			if (noteComponent.title().isPresent()) {
 				signed = true;
-				Text author = (noteComponent.author().isPresent())
-					? Text.literal(noteComponent.author().get())
-					: Text.translatable("gui.glowcase.note.anonymous").formatted(Formatting.WHITE);
+				Text author = (noteComponent.author().isPresent()) ? Text.literal(noteComponent.author().get()) : Text.translatable("gui.glowcase.note.anonymous").formatted(Formatting.WHITE);
 
-				tooltip.add(Text.translatable("item.glowcase.note.tooltip.0", author).formatted(Formatting.YELLOW));
+				textConsumer.accept(Text.translatable("item.glowcase.note.tooltip.0", author).formatted(Formatting.YELLOW));
 			}
 		}
 
-		if (!signed)
-			tooltip.add(Text.translatable("item.glowcase.note.tooltip.1").formatted(Formatting.GRAY));
+		if (!signed) {
+			textConsumer.accept(Text.translatable("item.glowcase.note.tooltip.1").formatted(Formatting.GRAY));
+		}
 	}
 }

@@ -3,6 +3,7 @@ package dev.hephaestus.glowcase.item;
 import com.mojang.datafixers.util.Pair;
 import dev.hephaestus.glowcase.Glowcase;
 import dev.hephaestus.glowcase.block.entity.ScreenBlockEntity;
+import net.minecraft.component.type.TooltipDisplayComponent;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.StackReference;
 import net.minecraft.item.Item;
@@ -18,6 +19,7 @@ import net.minecraft.world.World;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 import static dev.hephaestus.glowcase.block.GlowcaseBlock.canEditGlowcase;
 
@@ -27,11 +29,11 @@ public class TabletItem extends Item {
 	}
 
 	@Override
-	public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
+	public ActionResult use(World world, PlayerEntity user, Hand hand) {
 		ItemStack stack = user.getStackInHand(hand);
 
 		if (world.isClient() || !stack.contains(Glowcase.SLIDESHOW_COMPONENT.get()) || !stack.contains(Glowcase.LINKED_SCREEN_COMPONENT.get()))
-			return TypedActionResult.pass(user.getStackInHand(hand));
+			return ActionResult.PASS;
 
 		// Get components
 
@@ -56,7 +58,7 @@ public class TabletItem extends Item {
 		if (!(world.getBlockEntity(screenPos.getSecond()) instanceof ScreenBlockEntity screen && screen.macaddress.equals(screenPos.getFirst()))) {
 			// Link is invalid
 			stack.remove(Glowcase.LINKED_SCREEN_COMPONENT.get());
-			return TypedActionResult.pass(user.getStackInHand(hand));
+			return ActionResult.PASS;
 		}
 
 		Pair<String, String> slide = slideshow.get(index);
@@ -68,7 +70,7 @@ public class TabletItem extends Item {
 		} else
 			screen.setImage(slide.getFirst(), slide.getSecond(), null);
 
-		return TypedActionResult.success(user.getStackInHand(hand));
+		return ActionResult.SUCCESS;
 	}
 
 	@Override
@@ -154,9 +156,9 @@ public class TabletItem extends Item {
 	}
 
 	@Override
-	public void appendTooltip(ItemStack itemStack, Item.TooltipContext context, List<Text> tooltip, TooltipType options) {
-		tooltip.add(Text.translatable("item.glowcase.tablet.tooltip.0").formatted(Formatting.GRAY));
-		tooltip.add(Text.translatable("item.glowcase.tablet.tooltip.1").formatted(Formatting.DARK_GRAY));
-		tooltip.add(Text.translatable("item.glowcase.tablet.tooltip.2").formatted(Formatting.DARK_GRAY));
+	public void appendTooltip(ItemStack stack, TooltipContext context, TooltipDisplayComponent displayComponent, Consumer<Text> textConsumer, TooltipType type) {
+		textConsumer.accept(Text.translatable("item.glowcase.tablet.tooltip.0").formatted(Formatting.GRAY));
+		textConsumer.accept(Text.translatable("item.glowcase.tablet.tooltip.1").formatted(Formatting.DARK_GRAY));
+		textConsumer.accept(Text.translatable("item.glowcase.tablet.tooltip.2").formatted(Formatting.DARK_GRAY));
 	}
 }
