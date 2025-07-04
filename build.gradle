@@ -48,6 +48,10 @@ dependencies {
 	}
 }
 
+loom {
+	accessWidenerPath.set(file("src/main/resources/glowcase.accesswidener"))
+}
+
 processResources {
 	final Map<String, String> meta = [
 		version       : version,
