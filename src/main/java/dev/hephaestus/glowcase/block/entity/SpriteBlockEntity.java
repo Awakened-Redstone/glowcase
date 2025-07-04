@@ -7,6 +7,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.RegistryWrapper;
+import net.minecraft.storage.ReadView;
+import net.minecraft.storage.WriteView;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.Nullable;
@@ -28,7 +30,7 @@ public class SpriteBlockEntity extends GlowcaseBlockEntity {
 	public void setSprite(String newSprite) {
 		sprite = newSprite;
 		if (newSprite.contains(":")) {
-			Optional<Item> item = Registries.ITEM.getOrEmpty(Identifier.tryParse(newSprite));
+			Optional<Item> item = Registries.ITEM.getOptionalValue(Identifier.tryParse(newSprite));
 			renderItem = item.map(ItemStack::new).orElse(null);
 		} else {
 			renderItem = null;
@@ -45,25 +47,25 @@ public class SpriteBlockEntity extends GlowcaseBlockEntity {
 	}
 
 	@Override
-	public void writeNbt(NbtCompound tag, RegistryWrapper.WrapperLookup registryLookup) {
-		super.writeNbt(tag, registryLookup);
+	protected void writeData(WriteView view) {
+		super.writeData(view);
 
-		tag.putString("sprite", this.sprite);
-		tag.putInt("rotation", this.rotation);
-		tag.putString("z_offset", this.zOffset.name());
-		tag.putInt("color", this.color);
-		tag.putFloat("scale", this.scale);
+		view.putString("sprite", this.sprite);
+		view.putInt("rotation", this.rotation);
+		view.put("z_offset", TextBlockEntity.ZOffset.CODEC, this.zOffset);
+		view.putInt("color", this.color);
+		view.putFloat("scale", this.scale);
 	}
 
 	@Override
-	public void readNbt(NbtCompound tag, RegistryWrapper.WrapperLookup registryLookup) {
-		super.readNbt(tag, registryLookup);
+	protected void readData(ReadView view) {
+		super.readData(view);
 
-		setSprite(tag.getString("sprite"));
-		this.rotation = tag.getInt("rotation");
-		this.zOffset = TextBlockEntity.ZOffset.valueOf(tag.getString("z_offset"));
-		this.color = tag.getInt("color");
-		this.scale = tag.getFloat("scale");
+		setSprite(view.getString("sprite", "arrow"));
+		this.rotation = view.getInt("rotation", 0);
+		this.zOffset = view.read("z_offset", TextBlockEntity.ZOffset.CODEC).orElse(TextBlockEntity.ZOffset.BACK);
+		this.color = view.getInt("color", 0xFFFFFF);
+		this.scale = view.getFloat("scale", 1);
 	}
 
 	public void setRotation(int rotation) {

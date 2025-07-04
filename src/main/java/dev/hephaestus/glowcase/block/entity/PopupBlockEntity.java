@@ -5,13 +5,12 @@ import eu.pb4.placeholders.api.ParserContext;
 import eu.pb4.placeholders.api.parsers.NodeParser;
 import eu.pb4.placeholders.api.parsers.TagParser;
 import net.minecraft.block.BlockState;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.nbt.NbtString;
-import net.minecraft.registry.RegistryWrapper;
+import net.minecraft.storage.ReadView;
+import net.minecraft.storage.WriteView;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
+import net.minecraft.text.TextCodecs;
+import net.minecraft.util.StringIdentifiable;
 import net.minecraft.util.math.BlockPos;
 
 import java.util.ArrayList;
@@ -31,38 +30,27 @@ public class PopupBlockEntity extends GlowcaseBlockEntity {
 	}
 
 	@Override
-	protected void writeNbt(NbtCompound tag, RegistryWrapper.WrapperLookup registryLookup) {
-		super.writeNbt(tag, registryLookup);
+	protected void writeData(WriteView view) {
+		super.writeData(view);
 
-		tag.putString("title", this.title);
-		tag.putInt("color", this.color);
+		view.putString("title", this.title);
+		view.putInt("color", this.color);
 
-		tag.putString("text_alignment", this.textAlignment.name());
+		view.putString("text_alignment", this.textAlignment.name());
 
-		NbtList lines = tag.getList("lines", 8);
-		for (var text : this.lines) {
-			lines.add(NbtString.of(Text.Serialization.toJsonString(text, registryLookup)));
-		}
-
-		tag.put("lines", lines);
+		view.put("lines", TextCodecs.CODEC.listOf(), this.lines);
 	}
 
 	@Override
-	protected void readNbt(NbtCompound tag, RegistryWrapper.WrapperLookup registryLookup) {
-		super.readNbt(tag, registryLookup);
+	protected void readData(ReadView view) {
+		super.readData(view);
 
-		this.title = tag.getString("title");
-		this.lines = new ArrayList<>();
-		this.color = tag.getInt("color");
+		this.title = view.getString("title", "");
+		this.color = view.getInt("color", 0xFFFFFF);
 
-		this.textAlignment = TextBlockEntity.TextAlignment.valueOf(tag.getString("text_alignment"));
+		this.textAlignment = view.read("text_alignment", TextBlockEntity.TextAlignment.CODEC).orElse(TextBlockEntity.TextAlignment.CENTER);
 
-		NbtList lines = tag.getList("lines", 8);
-
-		for (NbtElement line : lines) {
-			if (line.getType() == NbtElement.END_TYPE) break;
-			this.lines.add(Text.Serialization.fromJson(line.asString(), registryLookup));
-		}
+		this.lines = new ArrayList<>(view.read("lines", TextCodecs.CODEC.listOf()).orElse(List.of(Text.empty())));
 
 		this.renderDirty = true;
 	}

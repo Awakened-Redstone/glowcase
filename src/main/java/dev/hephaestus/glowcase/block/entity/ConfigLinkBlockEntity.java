@@ -5,6 +5,8 @@ import dev.hephaestus.glowcase.util.ConfigLinkUtil;
 import net.minecraft.block.BlockState;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.registry.RegistryWrapper;
+import net.minecraft.storage.ReadView;
+import net.minecraft.storage.WriteView;
 import net.minecraft.util.math.BlockPos;
 
 public class ConfigLinkBlockEntity extends GlowcaseBlockEntity {
@@ -44,16 +46,18 @@ public class ConfigLinkBlockEntity extends GlowcaseBlockEntity {
 	}
 
 	@Override
-	public void writeNbt(NbtCompound tag, RegistryWrapper.WrapperLookup registryLookup) {
-		super.writeNbt(tag, registryLookup);
-		tag.putString("title", this.title);
-		tag.putString("url", this.url);
+	protected void writeData(WriteView view) {
+		super.writeData(view);
+
+		view.putString("title", this.title);
+		view.putString("url", this.url);
 	}
 
 	@Override
-	public void readNbt(NbtCompound tag, RegistryWrapper.WrapperLookup registryLookup) {
-		super.readNbt(tag, registryLookup);
-		this.title = tag.getString("title");
-		this.url = tag.getString("url");
+	protected void readData(ReadView view) {
+		super.readData(view);
+
+		this.title = view.getString("title", "");
+		this.url = view.getString("url", "glowcase:mod/modmenu");
 	}
 }

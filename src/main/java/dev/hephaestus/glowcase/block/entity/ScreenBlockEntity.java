@@ -4,8 +4,9 @@ import com.mojang.datafixers.util.Pair;
 import dev.hephaestus.glowcase.Glowcase;
 import dev.hephaestus.glowcase.client.GlowcaseClient;
 import net.minecraft.block.BlockState;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.registry.RegistryWrapper;
+import net.minecraft.storage.ReadView;
+import net.minecraft.storage.WriteView;
+import net.minecraft.util.Uuids;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3f;
@@ -76,66 +77,67 @@ public class ScreenBlockEntity extends GlowcaseBlockEntity {
 	}
 
 	@Override
-	protected void writeNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registryLookup) {
-		super.writeNbt(nbt, registryLookup);
+	protected void writeData(WriteView view) {
+		super.writeData(view);
 
-		nbt.putUuid("macaddress", macaddress);
+		view.put("macaddress", Uuids.INT_STREAM_CODEC, macaddress);
 
-		nbt.putFloat("width", width);
-		nbt.putFloat("height", height);
+		view.putFloat("width", width);
+		view.putFloat("height", height);
 
-		nbt.putBoolean("renderBackface", renderBackface);
-		nbt.putBoolean("stretch", stretch);
-		nbt.putBoolean("eink", eink);
+		view.putBoolean("renderBackface", renderBackface);
+		view.putBoolean("stretch", stretch);
+		view.putBoolean("eink", eink);
 
-		nbt.putInt("x_offset", this.xOffset.offset);
-		nbt.putInt("y_offset", this.yOffset.offset);
-		nbt.putInt("z_offset", this.zOffset.offset);
+		view.putInt("x_offset", this.xOffset.offset);
+		view.putInt("y_offset", this.yOffset.offset);
+		view.putInt("z_offset", this.zOffset.offset);
 
-		nbt.putFloat("px", this.preciseX);
-		nbt.putFloat("py", this.preciseY);
-		nbt.putFloat("pz", this.preciseZ);
+		view.putFloat("px", this.preciseX);
+		view.putFloat("py", this.preciseY);
+		view.putFloat("pz", this.preciseZ);
 
-		nbt.putFloat("pitch", this.pitch);
-		nbt.putFloat("yaw", this.yaw);
+		view.putFloat("pitch", this.pitch);
+		view.putFloat("yaw", this.yaw);
 
-		nbt.putString("url", url);
-		nbt.putString("alt", alt);
+		view.putString("url", url);
+		view.putString("alt", alt);
 
-		nbt.putString("preview", preview);
+		view.putString("preview", preview);
 	}
 
 	@Override
-	protected void readNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registryLookup) {
-		super.readNbt(nbt, registryLookup);
+	protected void readData(ReadView view) {
+		super.readData(view);
 
-		macaddress = nbt.getUuid("macaddress");
+		macaddress = view.read("macaddress", Uuids.INT_STREAM_CODEC).orElseGet(UUID::randomUUID);
 
-		width = nbt.getFloat("width");
-		height = nbt.getFloat("height");
+		width = view.getFloat("width", 1);
+		height = view.getFloat("height", 1);
 
-		renderBackface = nbt.getBoolean("renderBackface");
-		stretch = nbt.getBoolean("stretch");
-		eink = nbt.getBoolean("eink");
+		renderBackface = view.getBoolean("renderBackface", false);
+		stretch = view.getBoolean("stretch", false);
+		eink = view.getBoolean("eink", false);
 
-		xOffset = Offset.fromOffset(nbt.getInt("x_offset"));
-		yOffset = Offset.fromOffset(nbt.getInt("y_offset"));
-		zOffset = Offset.fromOffset(nbt.getInt("z_offset"));
+		xOffset = Offset.fromOffset(view.getInt("x_offset", 0));
+		yOffset = Offset.fromOffset(view.getInt("y_offset", 0));
+		zOffset = Offset.fromOffset(view.getInt("z_offset", 0));
 
-		preciseX = nbt.getFloat("px");
-		preciseY = nbt.getFloat("py");
-		preciseZ = nbt.getFloat("pz");
+		preciseX = view.getFloat("px", 0);
+		preciseY = view.getFloat("py", 0);
+		preciseZ = view.getFloat("pz", 0);
 
-		pitch = nbt.getFloat("pitch");
-		yaw = nbt.getFloat("yaw");
+		pitch = view.getFloat("pitch", 0);
+		yaw = view.getFloat("yaw", 0);
 
-		url = nbt.getString("url");
-		alt = nbt.getString("alt");
+		url = view.getString("url", "");
+		alt = view.getString("alt", "");
 
 		// Cache preview before needed for smooth experience
-		preview = nbt.getString("preview");
-		if (this.getWorld() != null && this.getWorld().isClient())
+		preview = view.getString("preview", "");
+		if (this.getWorld() != null && this.getWorld().isClient()) {
 			GlowcaseClient.screenImageCache.getImage(preview, null);
+		}
 
 		markDirty();
 	}

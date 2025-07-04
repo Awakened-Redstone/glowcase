@@ -3,11 +3,12 @@ package dev.hephaestus.glowcase.block.entity;
 import dev.hephaestus.glowcase.util.DisplayBlockSettings;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtOps;
-import net.minecraft.registry.RegistryWrapper;
+import net.minecraft.storage.ReadView;
+import net.minecraft.storage.WriteView;
 import net.minecraft.util.math.BlockPos;
 import org.joml.Vector3f;
+
+import java.util.Optional;
 
 public abstract class DisplayBlockEntity extends GlowcaseBlockEntity {
 	private Vector3f offset = new Vector3f(0.0F);
@@ -40,23 +41,17 @@ public abstract class DisplayBlockEntity extends GlowcaseBlockEntity {
 	}
 
 	@Override
-	protected void writeNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registryLookup) {
-		super.writeNbt(nbt, registryLookup);
+	protected void writeData(WriteView view) {
+		super.writeData(view);
 		DisplayBlockSettings settings = toSettings();
-		if (!settings.isEmpty()) nbt.put("display", DisplayBlockSettings.CODEC.encode(settings, NbtOps.INSTANCE, nbt).getOrThrow());
+		if (!settings.isEmpty()) view.put("display", DisplayBlockSettings.CODEC, settings);
 	}
 
 	@Override
-	protected void readNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registryLookup) {
-		super.readNbt(nbt, registryLookup);
-		if (nbt.contains("display")) {
-			var result = DisplayBlockSettings.CODEC.decode(NbtOps.INSTANCE, nbt.getCompound("display"));
-			if (result.isSuccess()) {
-				loadSettings(result.getOrThrow().getFirst());
-				return;
-			}
-		}
-		loadSettings(new DisplayBlockSettings());
+	protected void readData(ReadView view) {
+		super.readData(view);
+		Optional<DisplayBlockSettings> settings = view.read("display", DisplayBlockSettings.CODEC);
+		loadSettings(settings.orElseGet(DisplayBlockSettings::new));
 	}
 
 	public Vector3f getOffset() {

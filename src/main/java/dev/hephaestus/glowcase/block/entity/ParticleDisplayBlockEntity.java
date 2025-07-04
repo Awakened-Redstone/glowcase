@@ -14,6 +14,8 @@ import net.minecraft.particle.ParticleEffect;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.RegistryOps;
 import net.minecraft.registry.RegistryWrapper;
+import net.minecraft.storage.ReadView;
+import net.minecraft.storage.WriteView;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
@@ -35,61 +37,25 @@ public class ParticleDisplayBlockEntity extends GlowcaseBlockEntity {
 	}
 
 	@Override
-	protected void writeNbt(NbtCompound tag, RegistryWrapper.WrapperLookup registryLookup) {
-		super.writeNbt(tag, registryLookup);
+	protected void writeData(WriteView view) {
+		super.writeData(view);
 
-		RegistryOps<NbtElement> ops = registryLookup.getOps(NbtOps.INSTANCE);
-		ParticleTypes.TYPE_CODEC.encodeStart(ops, this.particle)
-			.resultOrPartial(LOGGER::error)
-			.ifPresent(result -> tag.put("particle", result));
-
-		DeviatedVec3d.CODEC.encodeStart(ops, position)
-			.resultOrPartial(LOGGER::error)
-			.ifPresent(result -> tag.put("position", result));
-
-		DeviatedVec3d.CODEC.encodeStart(ops, velocity)
-			.resultOrPartial(LOGGER::error)
-			.ifPresent(result -> tag.put("velocity", result));
-
-		DeviatedInteger.CODEC.encodeStart(ops, count)
-			.resultOrPartial(LOGGER::error)
-			.ifPresent(result -> tag.put("count", result));
-
-		DeviatedInteger.CODEC.encodeStart(ops, tickRate)
-			.resultOrPartial(LOGGER::error)
-			.ifPresent(result -> tag.put("tick_rate", result));
+		view.put("particle", ParticleTypes.TYPE_CODEC, this.particle);
+		view.put("position", DeviatedVec3d.CODEC, this.position);
+		view.put("velocity", DeviatedVec3d.CODEC, this.velocity);
+		view.put("count", DeviatedInteger.CODEC, this.count);
+		view.put("tick_rate", DeviatedInteger.CODEC, this.tickRate);
 	}
 
 	@Override
-	protected void readNbt(NbtCompound tag, RegistryWrapper.WrapperLookup registryLookup) {
-		super.readNbt(tag, registryLookup);
+	protected void readData(ReadView view) {
+		super.readData(view);
 
-		RegistryOps<NbtElement> ops = registryLookup.getOps(NbtOps.INSTANCE);
-
-		if (tag.contains("particle"))
-			ParticleTypes.TYPE_CODEC.parse(ops, tag.getCompound("particle"))
-				.resultOrPartial(LOGGER::error)
-				.ifPresent(result -> this.particle = result);
-
-		if (tag.contains("position"))
-			DeviatedVec3d.CODEC.parse(ops, tag.getCompound("position"))
-				.resultOrPartial(LOGGER::error)
-				.ifPresent(result -> this.position = result);
-
-		if (tag.contains("velocity"))
-			DeviatedVec3d.CODEC.parse(ops, tag.getCompound("velocity"))
-				.resultOrPartial(LOGGER::error)
-				.ifPresent(result -> this.velocity = result);
-
-		if (tag.contains("count"))
-			DeviatedInteger.CODEC.parse(ops, tag.getCompound("count"))
-				.resultOrPartial(LOGGER::error)
-				.ifPresent(result -> this.count = result);
-
-		if (tag.contains("tick_rate"))
-			DeviatedInteger.CODEC.parse(ops, tag.getCompound("tick_rate"))
-				.resultOrPartial(LOGGER::error)
-				.ifPresent(result -> this.tickRate = result);
+		this.particle = view.read("particle", ParticleTypes.TYPE_CODEC).orElse(ParticleTypes.FLAME);
+		this.position = view.read("position", DeviatedVec3d.CODEC).orElse(DeviatedVec3d.ZERO);
+		this.velocity = view.read("velocity", DeviatedVec3d.CODEC).orElse(DeviatedVec3d.ZERO);
+		this.count = view.read("count", DeviatedInteger.CODEC).orElse(DeviatedInteger.ZERO);
+		this.tickRate = view.read("tick_rate", DeviatedInteger.CODEC).orElse(DeviatedInteger.ZERO);
 	}
 
 	@Environment(EnvType.CLIENT)
@@ -102,7 +68,7 @@ public class ParticleDisplayBlockEntity extends GlowcaseBlockEntity {
 			Vec3d particlePos = entity.position.get(world.random::nextGaussian).add(pos.toCenterPos());
 			Vec3d particleVelocity = entity.velocity.get(world.random::nextGaussian);
 
-			world.addParticle(
+			world.addParticleClient(
 				entity.particle,
 				particlePos.x, particlePos.y, particlePos.z,
 				particleVelocity.x, particleVelocity.y, particleVelocity.z

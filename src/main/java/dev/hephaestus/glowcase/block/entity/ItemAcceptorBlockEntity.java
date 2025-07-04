@@ -1,16 +1,19 @@
 package dev.hephaestus.glowcase.block.entity;
 
+import com.mojang.serialization.Codec;
 import dev.hephaestus.glowcase.Glowcase;
 import net.minecraft.block.BlockState;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.registry.tag.TagKey;
+import net.minecraft.storage.ReadView;
+import net.minecraft.storage.WriteView;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.StringIdentifiable;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.BlockPos;
 
@@ -32,41 +35,25 @@ public class ItemAcceptorBlockEntity extends GlowcaseBlockEntity {
 	}
 
 	@Override
-	public void writeNbt(NbtCompound tag, RegistryWrapper.WrapperLookup registryLookup) {
-		super.writeNbt(tag, registryLookup);
+	protected void writeData(WriteView view) {
+		super.writeData(view);
 
-		tag.putString("item", this.item.toString());
-		tag.putInt("count", this.count);
-		tag.putInt("pulse", this.pulse);
-		tag.putBoolean("is_item_tag", this.isItemTag);
-		tag.putString("output_direction", this.outputDirection.name());
+		view.put("item", Identifier.CODEC, this.item);
+		view.putInt("count", this.count);
+		view.putInt("pulse", this.pulse);
+		view.putBoolean("is_item_tag", this.isItemTag);
+		view.put("output_direction", OutputDirection.CODEC, this.outputDirection);
 	}
 
 	@Override
-	public void readNbt(NbtCompound tag, RegistryWrapper.WrapperLookup registryLookup) {
-		super.readNbt(tag, registryLookup);
+	protected void readData(ReadView view) {
+		super.readData(view);
 
-		if (tag.contains("item", NbtElement.STRING_TYPE)) {
-			setItem(Identifier.tryParse(tag.getString("item")));
-		}
-
-		if (tag.contains("count", NbtElement.NUMBER_TYPE)) {
-			this.count = tag.getInt("count");
-		}
-
-		if (tag.contains("pulse", NbtElement.NUMBER_TYPE)) {
-			this.pulse = tag.getInt("pulse");
-		}
-
-		this.isItemTag = tag.getBoolean("is_item_tag");
-
-		if (tag.contains("output_direction", NbtElement.STRING_TYPE)) {
-			OutputDirection value = OutputDirection.getByName(tag.getString("output_direction"));
-
-			if (value != null) {
-				this.outputDirection = value;
-			}
-		}
+		this.setItem(view.read("item", Identifier.CODEC).orElse(Identifier.ofVanilla("air")));
+		this.count = view.getInt("count", 1);
+		this.pulse = view.getInt("pulse", 4);
+		this.isItemTag = view.getBoolean("is_item_tag", false);
+		this.outputDirection = view.read("output_direction", OutputDirection.CODEC).orElse(OutputDirection.BACK);
 	}
 
 	public Identifier getItem() {
@@ -108,27 +95,14 @@ public class ItemAcceptorBlockEntity extends GlowcaseBlockEntity {
 		return pulse;
 	}
 
-	public enum OutputDirection
-	{
+	public enum OutputDirection implements StringIdentifiable {
 		TOP, BACK, BOTTOM;
 
-		private static final Map<String, OutputDirection> directions;
+		public static final Codec<OutputDirection> CODEC = StringIdentifiable.createCodec(OutputDirection::values);
 
-		static {
-			final Map<String, OutputDirection> map = new HashMap<>();
-
-			for (final OutputDirection direction : OutputDirection.values()) {
-				map.put(direction.name().toLowerCase(Locale.ROOT), direction);
-			}
-
-			directions = Map.copyOf(map);
-		}
-
-		public static OutputDirection getByName(String name) {
-			if (name == null) {
-				return null;
-			}
-			return directions.get(name.toLowerCase(Locale.ROOT));
+		@Override
+		public String asString() {
+			return name().toLowerCase(Locale.ROOT);
 		}
 	}
 }

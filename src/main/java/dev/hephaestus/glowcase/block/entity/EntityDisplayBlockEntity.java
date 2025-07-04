@@ -4,14 +4,13 @@ import dev.hephaestus.glowcase.Glowcase;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.SpawnReason;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.SpawnEggItem;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.registry.Registries;
 import net.minecraft.registry.RegistryKeys;
-import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.registry.tag.TagKey;
-import net.minecraft.util.Identifier;
+import net.minecraft.storage.ReadView;
+import net.minecraft.storage.WriteView;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.joml.Vector3f;
@@ -28,13 +27,13 @@ public class EntityDisplayBlockEntity extends DisplayBlockEntity implements Stac
 
 	@Override
 	public boolean matchesStack(ItemStack stack) {
-		return (stack.isEmpty() && displayEntity == null) || (stack.getItem() instanceof SpawnEggItem eggItem && eggItem.isOfSameEntityType(stack, entityType));
+		return (stack.isEmpty() && displayEntity == null) || (stack.getItem() instanceof SpawnEggItem eggItem && eggItem.isOfSameEntityType(world.getRegistryManager(), stack, entityType));
 	}
 
 	@Override
 	public void setFromStack(ItemStack stack) {
 		if (stack.getItem() instanceof SpawnEggItem eggItem) {
-			setDisplayEntity(eggItem.getEntityType(stack).create(world));
+			setDisplayEntity(eggItem.getEntityType(world.getRegistryManager(), stack).create(world, SpawnReason.EVENT));
 			setScale(new Vector3f(Math.clamp(Math.round(Math.min(1F / displayEntity.getHeight(), 1F / displayEntity.getWidth()) * 8F) / 8F, 0.125F, 10F)));
 		}
 	}
@@ -56,7 +55,7 @@ public class EntityDisplayBlockEntity extends DisplayBlockEntity implements Stac
 
 	public static void tick(World world, BlockPos blockPos, BlockState state, EntityDisplayBlockEntity blockEntity) {
 		if (blockEntity.displayEntity == null && blockEntity.entityType != null) {
-			blockEntity.setDisplayEntity(blockEntity.entityType.create(world));
+			blockEntity.setDisplayEntity(blockEntity.entityType.create(world, SpawnReason.EVENT));
 		}
 		if (blockEntity.getDisplayEntity() != null && blockEntity.getDisplayEntity().getType().isIn(TICK)) {
 			++blockEntity.displayEntity.age;
@@ -64,15 +63,18 @@ public class EntityDisplayBlockEntity extends DisplayBlockEntity implements Stac
 	}
 
 	@Override
-	public void writeNbt(NbtCompound tag, RegistryWrapper.WrapperLookup registryLookup) {
-		super.writeNbt(tag, registryLookup);
-		if (entityType != null) tag.putString("type", Registries.ENTITY_TYPE.getId(entityType).toString());
+	protected void writeData(WriteView view) {
+		super.writeData(view);
+		if (entityType != null) {
+			view.put("type", EntityType.CODEC, entityType);
+		}
 	}
 
 	@Override
-	public void readNbt(NbtCompound tag, RegistryWrapper.WrapperLookup registryLookup) {
-		super.readNbt(tag, registryLookup);
-		this.entityType = tag.contains("type") ? Registries.ENTITY_TYPE.get(Identifier.tryParse(tag.getString("type"))) : null;
+	protected void readData(ReadView view) {
+		super.readData(view);
+
+		this.entityType = view.read("type", EntityType.CODEC).orElse(null);
 		this.displayEntity = null;
 	}
 }

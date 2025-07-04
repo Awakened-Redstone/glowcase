@@ -1,14 +1,12 @@
 package dev.hephaestus.glowcase.block.entity;
 
-import dev.hephaestus.glowcase.client.GlowcaseClient;
-import dev.hephaestus.glowcase.client.util.EmiClientUtils;
-
 import dev.hephaestus.glowcase.Glowcase;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.registry.RegistryWrapper;
+import net.minecraft.component.ComponentsAccess;
+import net.minecraft.storage.ReadView;
+import net.minecraft.storage.WriteView;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 
@@ -16,6 +14,7 @@ public class RecipeBlockEntity extends GlowcaseBlockEntity {
 	public String recipe = "diamond_sword";
 	public TextBlockEntity.ZOffset zOffset = TextBlockEntity.ZOffset.CENTER;
 
+	//TODO: maybe move XYZ rotation to nbt? or use vec2f
 	public float rotationX = 0f;
 	public float rotationY = 0f;
 
@@ -26,9 +25,9 @@ public class RecipeBlockEntity extends GlowcaseBlockEntity {
 	@Environment(EnvType.CLIENT)
 	public void openRecipe() {
 		Identifier rid = Identifier.tryParse(recipe);
-		if (GlowcaseClient.EMI_LOADED) {
+		/*if (GlowcaseClient.EMI_LOADED) {
 			EmiClientUtils.displayRecipe(rid);
-		}
+		}*/
 	}
 
 	public void setRecipe(String newRecipe) {
@@ -37,22 +36,27 @@ public class RecipeBlockEntity extends GlowcaseBlockEntity {
 	}
 
 	@Override
-	public void writeNbt(NbtCompound tag, RegistryWrapper.WrapperLookup registryLookup) {
-		super.writeNbt(tag, registryLookup);
+	protected void writeData(WriteView view) {
+		super.writeData(view);
 
-		tag.putString("recipe", this.recipe);
-		tag.putString("z_offset", this.zOffset.name());
-		tag.putFloat("rotationX", this.rotationX);
-		tag.putFloat("rotationY", this.rotationY);
+		view.putString("recipe", this.recipe);
+		view.put("z_offset", TextBlockEntity.ZOffset.CODEC, this.zOffset);
+		view.putFloat("rotationX", this.rotationX);
+		view.putFloat("rotationY", this.rotationY);
 	}
 
 	@Override
-	public void readNbt(NbtCompound tag, RegistryWrapper.WrapperLookup registryLookup) {
-		super.readNbt(tag, registryLookup);
+	protected void readComponents(ComponentsAccess components) {
+		super.readComponents(components);
+	}
 
-		this.recipe = tag.getString("recipe");
-		this.zOffset = TextBlockEntity.ZOffset.valueOf(tag.getString("z_offset"));
-		this.rotationX = tag.contains("rotationX") ? tag.getFloat("rotationX") : 0f;
-		this.rotationY = tag.contains("rotationY") ? tag.getFloat("rotationY") : 0f;
+	@Override
+	protected void readData(ReadView view) {
+		super.readData(view);
+
+		this.recipe = view.getString("recipe", "diamond_sword");
+		this.zOffset = view.read("z_offset", TextBlockEntity.ZOffset.CODEC).orElse(TextBlockEntity.ZOffset.CENTER);
+		this.rotationX = view.getFloat("rotationX", 0);
+		this.rotationY = view.getFloat("rotationY", 0);
 	}
 }

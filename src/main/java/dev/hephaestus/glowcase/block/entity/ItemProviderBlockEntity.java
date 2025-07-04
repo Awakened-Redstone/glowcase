@@ -1,5 +1,6 @@
 package dev.hephaestus.glowcase.block.entity;
 
+import com.mojang.serialization.Codec;
 import dev.hephaestus.glowcase.Glowcase;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
@@ -7,20 +8,21 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.registry.RegistryWrapper;
+import net.minecraft.storage.ReadView;
+import net.minecraft.storage.WriteView;
 import net.minecraft.util.Hand;
+import net.minecraft.util.StringIdentifiable;
+import net.minecraft.util.Uuids;
 import net.minecraft.util.math.BlockPos;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 public class ItemProviderBlockEntity extends GlowcaseBlockEntity implements InfiniteInventory, StackInteractable {
 	protected ItemStack stack = ItemStack.EMPTY;
 	protected GivesItem givesItem = GivesItem.ALWAYS;
 	protected boolean invisible = false;
 	public long cooldown = 0;
-	protected final Map<UUID, Long> givenTimes = new HashMap<>();
+	protected Map<UUID, Long> givenTimes = new HashMap<>();
 
 	public ItemProviderBlockEntity(BlockPos pos, BlockState state) {
 		super(Glowcase.ITEM_PROVIDER_BLOCK_ENTITY.get(), pos, state);
@@ -63,35 +65,26 @@ public class ItemProviderBlockEntity extends GlowcaseBlockEntity implements Infi
 	}
 
 	@Override
-	public void writeNbt(NbtCompound tag, RegistryWrapper.WrapperLookup registryLookup) {
-		super.writeNbt(tag, registryLookup);
-		if (!this.stack.isEmpty()) tag.put("item", this.stack.encode(registryLookup));
-		tag.putString("gives_item", this.givesItem.name());
-		tag.putLong("cooldown", this.cooldown);
-		NbtCompound timesNbt = new NbtCompound();
-		givenTimes.forEach((id, tick) -> timesNbt.putLong(id.toString(), tick));
-		tag.put("given_times", timesNbt);
-		tag.putBoolean("invisible", this.invisible);
+	protected void writeData(WriteView view) {
+		super.writeData(view);
+
+		if (!this.stack.isEmpty()) view.put("item", ItemStack.CODEC, this.stack);
+		view.put("gives_item", GivesItem.CODEC, this.givesItem);
+		view.putLong("cooldown", this.cooldown);
+		view.put("given_times", Codec.unboundedMap(Uuids.CODEC, Codec.LONG), givenTimes);
+
+		view.putBoolean("invisible", this.invisible);
 	}
 
 	@Override
-	public void readNbt(NbtCompound tag, RegistryWrapper.WrapperLookup registryLookup) {
-		super.readNbt(tag, registryLookup);
-		this.stack = tag.contains("item", NbtElement.COMPOUND_TYPE) ? ItemStack.fromNbt(registryLookup, tag.getCompound("item")).orElse(ItemStack.EMPTY) : ItemStack.EMPTY;
-		if (tag.contains("gives_item")) {
-			this.givesItem = GivesItem.valueOf(tag.getString("gives_item"));
-		} else {
-			this.givesItem = GivesItem.ALWAYS;
-		}
-		this.cooldown = tag.getLong("cooldown");
+	protected void readData(ReadView view) {
+		super.readData(view);
 
-		givenTimes.clear();
-		NbtCompound given = tag.getCompound("given_times");
-		for (String key : given.getKeys()) {
-			givenTimes.put(UUID.fromString(key), given.getLong(key));
-		}
-
-		this.invisible = tag.getBoolean("invisible");
+		this.stack = view.read("item", ItemStack.CODEC).orElse(ItemStack.EMPTY);
+		this.givesItem = view.read("gives_item", GivesItem.CODEC).orElse(GivesItem.ALWAYS);
+		this.cooldown = view.getLong("cooldown", 0);
+		this.givenTimes = new HashMap<>(view.read("given_times", Codec.unboundedMap(Uuids.CODEC, Codec.LONG)).orElseGet(() -> Map.of()));
+		this.invisible = view.getBoolean("invisible", false);
 	}
 
 	public void cycleGiveType() {
@@ -133,7 +126,14 @@ public class ItemProviderBlockEntity extends GlowcaseBlockEntity implements Infi
 		}
 	}
 
-	public enum GivesItem {
-		ALWAYS, TIMED, ONE
+	public enum GivesItem implements StringIdentifiable {
+		ALWAYS, TIMED, ONE;
+
+		public static final Codec<GivesItem> CODEC = StringIdentifiable.createCodec(GivesItem::values);
+
+		@Override
+		public String asString() {
+			return name().toLowerCase(Locale.ROOT);
+		}
 	}
 }

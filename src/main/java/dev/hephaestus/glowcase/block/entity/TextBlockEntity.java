@@ -1,22 +1,23 @@
 package dev.hephaestus.glowcase.block.entity;
 
+import com.mojang.serialization.Codec;
 import dev.hephaestus.glowcase.Glowcase;
 import dev.hephaestus.glowcase.client.util.ColorUtil;
 import eu.pb4.placeholders.api.ParserContext;
 import eu.pb4.placeholders.api.parsers.NodeParser;
 import eu.pb4.placeholders.api.parsers.TagParser;
 import net.minecraft.block.BlockState;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.nbt.NbtString;
-import net.minecraft.registry.RegistryWrapper;
+import net.minecraft.storage.ReadView;
+import net.minecraft.storage.WriteView;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
+import net.minecraft.text.TextCodecs;
+import net.minecraft.util.StringIdentifiable;
 import net.minecraft.util.math.BlockPos;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class TextBlockEntity extends GlowcaseBlockEntity {
 	public static final NodeParser PARSER = TagParser.DEFAULT;
@@ -39,75 +40,39 @@ public class TextBlockEntity extends GlowcaseBlockEntity {
 	}
 
 	@Override
-	protected void writeNbt(NbtCompound tag, RegistryWrapper.WrapperLookup registryLookup) {
-		super.writeNbt(tag, registryLookup);
+	protected void writeData(WriteView view) {
+		super.writeData(view);
 
-		tag.putFloat("scale", this.scale);
-		tag.putInt("color", this.color);
-		tag.putInt("background_color", this.backgroundColor);
+		view.putFloat("scale", this.scale);
+		view.putInt("color", this.color);
+		view.putInt("background_color", this.backgroundColor);
 
-		tag.putString("text_alignment", this.textAlignment.name());
-		tag.putString("z_offset", this.zOffset.name());
-		tag.putBoolean("shadow", this.shadow);
-		tag.putFloat("viewDistance", this.viewDistance);
+		view.putString("text_alignment", this.textAlignment.name());
+		view.putString("z_offset", this.zOffset.name());
+		view.putBoolean("shadow", this.shadow);
+		view.putFloat("viewDistance", this.viewDistance);
 
-		NbtList lines = tag.getList("lines", 8);
-		for (var text : this.lines) {
-			lines.add(NbtString.of(Text.Serialization.toJsonString(text, registryLookup)));
-		}
-
-		tag.put("lines", lines);
+		view.put("lines", TextCodecs.CODEC.listOf(), lines);
 	}
 
 	@Override
-	protected void readNbt(NbtCompound tag, RegistryWrapper.WrapperLookup registryLookup) {
-		super.readNbt(tag, registryLookup);
+	protected void readData(ReadView view) {
+		super.readData(view);
 
-		this.lines = new ArrayList<>();
-		this.scale = tag.getFloat("scale");
-		this.color = tag.getInt("color");
+		this.scale = view.getFloat("scale", 1);
+		this.color = view.getInt("color", 0xFFFFFFFF);
 
 		// Force-fix alpha of 0 to opaque.
 		if ((this.color & ColorUtil.ALPHA_MASK) == 0) {
 			this.color |= ColorUtil.ALPHA_MASK;
 		}
 
-		if (tag.contains("shadow_type", NbtElement.STRING_TYPE)) {
-			switch (ShadowType.valueOf(tag.getString("shadow_type"))) {
-				case NONE -> {
-					this.backgroundColor = 0;
-					this.shadow = false;
-				}
-				case PLATE -> {
-					this.backgroundColor = PLATE_BACKGROUND;
-					this.shadow = false;
-				}
-				default -> {
-					this.backgroundColor = 0;
-					this.shadow = true;
-				}
-			}
-		}
-
-		if (tag.contains("background_color", NbtElement.NUMBER_TYPE)) {
-			this.backgroundColor = tag.getInt("background_color");
-		}
-
-		if (tag.contains("shadow")) {
-			this.shadow = tag.getBoolean("shadow");
-		}
-
-		this.textAlignment = TextAlignment.valueOf(tag.getString("text_alignment"));
-		this.zOffset = ZOffset.valueOf(tag.getString("z_offset"));
-		this.viewDistance = tag.contains("viewDistance") ? tag.getFloat("viewDistance") : -1.0F;
-
-		NbtList lines = tag.getList("lines", 8);
-
-		for (NbtElement line : lines) {
-			if (line.getType() == NbtElement.END_TYPE) break;
-			this.lines.add(Text.Serialization.fromJson(line.asString(), registryLookup));
-		}
-
+		this.backgroundColor = view.getInt("background_color", 0);
+		this.shadow = view.getBoolean("shadow", true);
+		this.textAlignment = view.read("text_alignment", TextAlignment.CODEC).orElse(TextAlignment.CENTER);
+		this.zOffset = view.read("z_offset", ZOffset.CODEC).orElse(ZOffset.CENTER);
+		this.viewDistance = view.getFloat("viewDistance", -1);
+		this.lines = view.read("lines", TextCodecs.CODEC.listOf()).orElseGet(List::of);
 		this.renderDirty = true;
 	}
 
@@ -146,16 +111,25 @@ public class TextBlockEntity extends GlowcaseBlockEntity {
 		}
 	}
 
-	public enum TextAlignment {
-		LEFT, CENTER, CENTER_LEFT, CENTER_RIGHT, RIGHT
+	public enum TextAlignment implements StringIdentifiable {
+		LEFT, CENTER, CENTER_LEFT, CENTER_RIGHT, RIGHT;
+
+		public static final Codec<TextAlignment> CODEC = StringIdentifiable.createCodec(TextAlignment::values);
+
+		@Override
+		public String asString() {
+			return name().toLowerCase();
+		}
 	}
 
-	public enum ZOffset {
-		FRONT, CENTER, BACK
-	}
+	public enum ZOffset implements StringIdentifiable {
+		FRONT, CENTER, BACK;
 
-	@Deprecated(forRemoval = true)
-	public enum ShadowType {
-		DROP, PLATE, NONE
+		public static final Codec<ZOffset> CODEC = StringIdentifiable.createCodec(ZOffset::values);
+
+		@Override
+		public String asString() {
+			return name().toLowerCase();
+		}
 	}
 }

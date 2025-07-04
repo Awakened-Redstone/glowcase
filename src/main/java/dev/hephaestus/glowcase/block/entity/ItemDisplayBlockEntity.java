@@ -6,6 +6,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.registry.RegistryWrapper;
+import net.minecraft.storage.ReadView;
+import net.minecraft.storage.WriteView;
 import net.minecraft.util.math.BlockPos;
 
 public class ItemDisplayBlockEntity extends DisplayBlockEntity implements StackInteractable {
@@ -37,14 +39,16 @@ public class ItemDisplayBlockEntity extends DisplayBlockEntity implements StackI
 	}
 
 	@Override
-	public void writeNbt(NbtCompound tag, RegistryWrapper.WrapperLookup registryLookup) {
-		super.writeNbt(tag, registryLookup);
-		if (!this.stack.isEmpty()) tag.put("item", this.stack.encode(registryLookup));
+	protected void writeData(WriteView view) {
+		super.writeData(view);
+
+		if (!this.stack.isEmpty()) view.put("item", ItemStack.CODEC, this.stack);
 	}
 
 	@Override
-	public void readNbt(NbtCompound tag, RegistryWrapper.WrapperLookup registryLookup) {
-		super.readNbt(tag, registryLookup);
-		this.stack = tag.contains("item", NbtElement.COMPOUND_TYPE) ? ItemStack.fromNbt(registryLookup, tag.getCompound("item")).orElse(ItemStack.EMPTY) : ItemStack.EMPTY;
+	protected void readData(ReadView view) {
+		super.readData(view);
+
+		this.stack = view.read("item", ItemStack.CODEC).orElse(ItemStack.EMPTY);
 	}
 }

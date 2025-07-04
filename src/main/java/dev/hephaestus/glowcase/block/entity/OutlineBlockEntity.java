@@ -4,6 +4,8 @@ import dev.hephaestus.glowcase.Glowcase;
 import net.minecraft.block.BlockState;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.registry.RegistryWrapper;
+import net.minecraft.storage.ReadView;
+import net.minecraft.storage.WriteView;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
 
@@ -19,23 +21,20 @@ public class OutlineBlockEntity extends GlowcaseBlockEntity {
 	}
 
 	@Override
-	public void writeNbt(NbtCompound tag, RegistryWrapper.WrapperLookup registryLookup) {
-		super.writeNbt(tag, registryLookup);
+	protected void writeData(WriteView view) {
+		super.writeData(view);
 
-		tag.putIntArray("offset", List.of(this.offset.getX(), this.offset.getY(), this.offset.getZ()));
-		tag.putIntArray("scale", List.of(this.scale.getX(), this.scale.getY(), this.scale.getZ()));
-		tag.putInt("color", this.color);
+		view.put("offset", Vec3i.CODEC, this.offset);
+		view.put("scale", Vec3i.CODEC, this.scale);
+		view.putInt("color", this.color);
 	}
 
 	@Override
-	public void readNbt(NbtCompound tag, RegistryWrapper.WrapperLookup registryLookup) {
-		super.readNbt(tag, registryLookup);
+	protected void readData(ReadView view) {
+		super.readData(view);
 
-		int[] offset = tag.getIntArray("offset");
-		int[] scale = tag.getIntArray("scale");
-
-		this.offset = new Vec3i(offset[0], offset[1], offset[2]);
-		this.scale = new Vec3i(scale[0], scale[1], scale[2]);
-		this.color = tag.getInt("color");
+		this.offset = view.read("offset", Vec3i.CODEC).orElse(Vec3i.ZERO);
+		this.scale = view.read("scale", Vec3i.CODEC).orElseGet(() -> new Vec3i(1, 1, 1));
+		this.color = view.getInt("color", 0xFFFFFF);
 	}
 }

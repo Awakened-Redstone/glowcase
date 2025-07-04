@@ -1,6 +1,7 @@
 package dev.hephaestus.glowcase.block.entity;
 
 import com.mojang.logging.LogUtils;
+import com.mojang.serialization.Codec;
 import dev.hephaestus.glowcase.Glowcase;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -19,7 +20,10 @@ import net.minecraft.registry.RegistryOps;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.storage.ReadView;
+import net.minecraft.storage.WriteView;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.StringIdentifiable;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
@@ -32,7 +36,7 @@ import java.util.Map;
 public class SoundPlayerBlockEntity extends GlowcaseBlockEntity {
 	private static final Logger LOGGER = LogUtils.getLogger();
 
-	public Identifier soundId = SoundEvents.ENTITY_CAT_PURREOW.getId();
+	public Identifier soundId = SoundEvents.ENTITY_CAT_PURREOW.id();
 	public SoundCategory category = SoundCategory.BLOCKS;
 	public float volume = 1;
 	public float pitch = 1;
@@ -54,53 +58,36 @@ public class SoundPlayerBlockEntity extends GlowcaseBlockEntity {
 	}
 
 	@Override
-	protected void writeNbt(NbtCompound tag, RegistryWrapper.WrapperLookup registryLookup) {
-		super.writeNbt(tag, registryLookup);
+	protected void writeData(WriteView view) {
+		super.writeData(view);
 
-		RegistryOps<NbtElement> ops = registryLookup.getOps(NbtOps.INSTANCE);
-		Identifier.CODEC.encodeStart(ops, this.soundId)
-			.resultOrPartial(LOGGER::error)
-			.ifPresent(result -> tag.put("sound", result));
-		tag.putString("category", this.category.toString());
-		tag.putFloat("volume", this.volume);
-		tag.putFloat("pitch", this.pitch);
-		tag.putInt("repeatDelay", this.repeatDelay);
-		tag.putFloat("distance", this.distance);
-		tag.putBoolean("relative", this.relative);
-		tag.putBoolean("cancelOthers", this.cancelOthers);
-		Vec3d.CODEC.encodeStart(ops, this.offset)
-			.resultOrPartial(LOGGER::error)
-			.ifPresent(result -> tag.put("offset", result));
-		tag.putString("volumeSampler", volumeSampler.name());
+		view.put("sound", Identifier.CODEC, this.soundId);
+		view.putString("category", this.category.name());
+		view.putFloat("volume", this.volume);
+		view.putFloat("pitch", this.pitch);
+		view.putInt("repeatDelay", this.repeatDelay);
+		view.putFloat("distance", this.distance);
+		view.putBoolean("relative", this.relative);
+		view.putBoolean("cancelOthers", this.cancelOthers);
+		view.put("offset", Vec3d.CODEC, this.offset);
+		view.put("volumeSampler", PositionSampler.CODEC, volumeSampler);
 	}
 
 	@Override
-	protected void readNbt(NbtCompound tag, RegistryWrapper.WrapperLookup registryLookup) {
-		super.readNbt(tag, registryLookup);
+	protected void readData(ReadView view) {
+		super.readData(view);
 
-		RegistryOps<NbtElement> ops = registryLookup.getOps(NbtOps.INSTANCE);
-		if (tag.contains("sound"))
-			Identifier.CODEC.parse(ops, tag.get("sound"))
-				.resultOrPartial(LOGGER::error)
-				.ifPresent(result -> this.soundId = result);
-		this.category = SoundCategory.valueOf(tag.getString("category"));
-		this.volume = tag.getFloat("volume");
-		this.pitch = tag.getFloat("pitch");
-		this.repeatDelay = tag.getInt("repeatDelay");
-		this.distance = tag.getFloat("distance");
-		this.relative = tag.getBoolean("relative");
-		this.cancelOthers = tag.getBoolean("cancelOthers");
-		if (tag.contains("offset"))
-			Vec3d.CODEC.parse(ops, tag.get("offset"))
-				.resultOrPartial(LOGGER::error)
-				.ifPresent(result -> this.offset = result);
+		this.soundId = view.read("sound", Identifier.CODEC).orElseGet(SoundEvents.ENTITY_CAT_PURREOW::id);
 
-		if (tag.contains("volumeSampler", NbtElement.STRING_TYPE)) {
-			final PositionSampler sampler = PositionSampler.getByName(tag.getString("volumeSampler"));
-			if (sampler != null) {
-				this.volumeSampler = sampler;
-			}
-		}
+		this.category = SoundCategory.valueOf(view.getString("category", SoundCategory.BLOCKS.name()));
+		this.volume = view.getFloat("volume", 1);
+		this.pitch = view.getFloat("pitch", 1);
+		this.repeatDelay = view.getInt("repeatDelay", 0);
+		this.distance = view.getFloat("distance", 16);
+		this.relative = view.getBoolean("relative", false);
+		this.cancelOthers = view.getBoolean("cancelOthers", false);
+		this.offset = view.read("offset", Vec3d.CODEC).orElse(Vec3d.ZERO);
+		this.volumeSampler = view.read("volumeSampler", PositionSampler.CODEC).orElse(PositionSampler.CAMERA);
 	}
 
 	@Environment(EnvType.CLIENT)
@@ -157,7 +144,7 @@ public class SoundPlayerBlockEntity extends GlowcaseBlockEntity {
 	}
 
 
-	public enum PositionSampler {
+	public enum PositionSampler implements StringIdentifiable {
 		CAMERA {
 			@Override
 			public Vec3d getPosition(final MinecraftClient client) {
@@ -172,27 +159,16 @@ public class SoundPlayerBlockEntity extends GlowcaseBlockEntity {
 				}
 				return client.player.getPos();
 			}
-		},
-		;
+		};
 
-		private static final Map<String, PositionSampler> lookup;
-
-		static {
-			final Map<String, PositionSampler> samplers = new HashMap<>();
-			for (final PositionSampler sampler : values()) {
-				samplers.put(sampler.name().toLowerCase(Locale.ROOT), sampler);
-			}
-			lookup = Map.copyOf(samplers);
-		}
-
-		public static PositionSampler getByName(String value) {
-			if (value == null) {
-				return null;
-			}
-			return lookup.get(value.toLowerCase(Locale.ROOT));
-		}
+		public static final Codec<PositionSampler> CODEC = StringIdentifiable.createCodec(PositionSampler::values);
 
 		public abstract Vec3d getPosition(MinecraftClient client);
+
+		@Override
+		public String asString() {
+			return name().toLowerCase(Locale.ROOT);
+		}
 	}
 
 	// I don't think the repeat is necessary on this at this point
