@@ -1,7 +1,5 @@
 package dev.hephaestus.glowcase.client.gui.screen.ingame;
 
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.datafixers.util.Pair;
 import dev.hephaestus.glowcase.Glowcase;
 import dev.hephaestus.glowcase.client.gui.widget.ingame.ColorPickerWidget;
@@ -12,9 +10,9 @@ import eu.pb4.placeholders.api.ParserContext;
 import eu.pb4.placeholders.api.parsers.NodeParser;
 import eu.pb4.placeholders.api.parsers.TagParser;
 import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.render.*;
 import net.minecraft.client.util.SelectionManager;
 import net.minecraft.item.ItemStack;
 import net.minecraft.text.StringVisitable;
@@ -249,17 +247,17 @@ public class NoteEditScreen extends TextEditorScreen {
 			context.drawText(textRenderer, Language.getInstance().reorder(text), (int) x, (height/2 - BG_HEIGHT/2 + TXT_OFF_Y) + (textRenderer.fontHeight * i), NoteTextColorResource.TXT_COLOR, false);
 
 			if (overflow && i == currentRow) {
-				RenderSystem.enableBlend();
+				//RenderSystem.enableBlend();
 				for (int j = 0; j < textRenderer.fontHeight; j++) {
-					context.drawTexture(TEXTURE,
+					context.drawTexture(RenderPipelines.GUI_TEXTURED, TEXTURE,
 						width/2 - BG_WIDTH/2 + SCREEN_X1,
 						height/2 - BG_HEIGHT/2 + TXT_OFF_Y + (textRenderer.fontHeight * currentRow) + j,
-						0, BG_SIZE - 1, 32, 1
+						0, BG_SIZE - 1, 32, 1, 32, 1
 					);
-					context.drawTexture(TEXTURE,
+					context.drawTexture(RenderPipelines.GUI_TEXTURED, TEXTURE,
 						width/2 + BG_WIDTH/2 + SCREEN_X2 - 32,
 						height/2 - BG_HEIGHT/2 + TXT_OFF_Y + (textRenderer.fontHeight * currentRow) + j,
-						0, BG_SIZE - 2, 32, 1
+						0, BG_SIZE - 2, 32, 1, 32, 1
 					);
 				}
 
@@ -268,7 +266,7 @@ public class NoteEditScreen extends TextEditorScreen {
 				if (editing_line_offset > 0)
 					context.drawText(textRenderer, ARROW_RIGHT_SYMBOL, width/2 + BG_WIDTH/2 + SCREEN_X2 - textRenderer.getWidth(ARROW_RIGHT_SYMBOL) - 1, height / 2 - BG_HEIGHT / 2 + TXT_OFF_Y + (textRenderer.fontHeight * currentRow), NoteTextColorResource.TXT_COLOR, false);
 
-				RenderSystem.disableBlend();
+				//RenderSystem.disableBlend();
 			}
 		}
 
@@ -286,7 +284,7 @@ public class NoteEditScreen extends TextEditorScreen {
 			int selectionEnd = MathHelper.clamp(Math.max(caretStart, caretEnd), 0, line.length());
 
 			String preSelection = line.substring(0, MathHelper.clamp(line.length(), 0, selectionStart));
-			int startX = client.textRenderer.getWidth(preSelection);
+			int cursorX = client.textRenderer.getWidth(preSelection);
 			int startY = (height/2 - BG_HEIGHT/2 + TXT_OFF_Y) + (textRenderer.fontHeight * currentRow);
 
 			float push = switch (overflow ? NoteComponent.Alignment.RIGHT : alignment) {
@@ -295,43 +293,33 @@ public class NoteEditScreen extends TextEditorScreen {
 				case RIGHT ->  width/2f + BG_WIDTH/2f - TXT_X_PADDING/2f - textRenderer.getWidth(line);
 			};
 
-			startX += (int) push;
+			cursorX += (int) push;
 			if (signing)
-				startX += textRenderer.getWidth(screen.get(currentRow));
+				cursorX += textRenderer.getWidth(screen.get(currentRow));
 
 			if (overflow) {
 				int apply = 0;
 
-				while ((startX + editing_line_offset + apply) < (width/2 - BG_WIDTH/2 + SCREEN_X1 + 32))
+				while ((cursorX + editing_line_offset + apply) < (width/2 - BG_WIDTH/2 + SCREEN_X1 + 32))
 					apply++;
-				while ((startX + editing_line_offset+ apply) > (width/2 + BG_WIDTH/2 + SCREEN_X2 - 32))
+				while ((cursorX + editing_line_offset+ apply) > (width/2 + BG_WIDTH/2 + SCREEN_X2 - 32))
 					apply--;
 
 				editing_line_offset += apply;
-				startX += editing_line_offset;
+				cursorX += editing_line_offset;
 			}
 
 			int caretLength = 9;
 			if (this.ticksSinceOpened / 6 % 2 == 0) {
 				if (selectionStart < line.length()) {
-					context.fill(startX, startY, startX + 1, startY + caretLength, 0xCC000000);
+					context.fill(cursorX, startY, cursorX + 1, startY + caretLength, 0xCC000000);
 				} else {
-					context.drawText(textRenderer, "_", startX, startY, NoteTextColorResource.TXT_COLOR, false);
+					context.drawText(textRenderer, "_", cursorX, startY, NoteTextColorResource.TXT_COLOR, false);
 				}
 			}
 
 			if (caretStart != caretEnd) {
-				int endX = startX + textRenderer.getWidth(line.substring(selectionStart, selectionEnd));
-				Tessellator tessellator = Tessellator.getInstance();
-				BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
-				RenderSystem.enableColorLogicOp();
-				RenderSystem.logicOp(GlStateManager.LogicOp.OR_REVERSE);
-				bufferBuilder.vertex(context.getMatrices().peek().getPositionMatrix(), startX, startY + caretLength, 0.0F).color(0, 0, 255, 255);
-				bufferBuilder.vertex(context.getMatrices().peek().getPositionMatrix(), endX, startY + caretLength, 0.0F).color(0, 0, 255, 255);
-				bufferBuilder.vertex(context.getMatrices().peek().getPositionMatrix(), endX, startY, 0.0F).color(0, 0, 255, 255);
-				bufferBuilder.vertex(context.getMatrices().peek().getPositionMatrix(), startX, startY, 0.0F).color(0, 0, 255, 255);
-				BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
-				RenderSystem.disableColorLogicOp();
+				renderCursor(context, cursorX, startY, textRenderer.getWidth(line.substring(selectionStart, selectionEnd)));
 			}
 		}
 
@@ -346,7 +334,7 @@ public class NoteEditScreen extends TextEditorScreen {
 	@Override
 	public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
 		super.renderBackground(context, mouseX, mouseY, delta);
-		context.drawTexture(TEXTURE, width/2 - BG_WIDTH/2, height/2 - BG_HEIGHT/2, BG_WIDTH, BG_HEIGHT, 0, 0, BG_WIDTH, BG_HEIGHT, BG_SIZE, BG_SIZE);
+		context.drawTexture(RenderPipelines.GUI_TEXTURED, TEXTURE, width/2 - BG_WIDTH/2, height/2 - BG_HEIGHT/2, BG_WIDTH, BG_HEIGHT, 0, 0, BG_WIDTH, BG_HEIGHT, BG_SIZE, BG_SIZE);
 	}
 
 	@Override

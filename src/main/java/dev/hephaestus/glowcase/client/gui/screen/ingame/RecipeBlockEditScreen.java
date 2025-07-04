@@ -6,8 +6,8 @@ import dev.hephaestus.glowcase.block.entity.RecipeBlockEntity;
 import dev.hephaestus.glowcase.block.entity.TextBlockEntity;
 import dev.hephaestus.glowcase.client.GlowcaseClient;
 import dev.hephaestus.glowcase.client.gui.widget.ingame.SuggestionListWidget;
-import dev.hephaestus.glowcase.client.util.EmiClientUtils;
 import dev.hephaestus.glowcase.packet.C2SEditRecipeBlock;
+import dev.hephaestus.glowcase.client.util.EmiClientUtils;
 import dev.hephaestus.glowcase.util.EmiUtils;
 import dev.hephaestus.glowcase.util.RequiresEmiLoaded;
 import net.minecraft.client.gui.DrawContext;
@@ -17,6 +17,7 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
+import org.joml.Matrix3x2fStack;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -163,13 +164,13 @@ public class RecipeBlockEditScreen extends GlowcaseScreen {
 			int holderWidth = EmiClientUtils.getHolderWidth(widgetHolder);
 			int holderHeight = EmiClientUtils.getHolderHeight(widgetHolder);
 
-			MatrixStack matrixStack = context.getMatrices();
-			matrixStack.push();
-			matrixStack.translate(width / 2f - holderWidth / 2f, baseYForRecipe + spaceForRecipe / 2f - holderHeight / 2f, 0);
+			Matrix3x2fStack matrixStack = context.getMatrices();
+			matrixStack.pushMatrix();
+			matrixStack.translate(width / 2f - holderWidth / 2f, baseYForRecipe + spaceForRecipe / 2f - holderHeight / 2f);
 
 			EmiClientUtils.renderEmiRecipe(widgetHolder, context, delta);
 
-			matrixStack.pop();
+			matrixStack.popMatrix();
 		}
 	}
 

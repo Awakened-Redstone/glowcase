@@ -1,20 +1,25 @@
 package dev.hephaestus.glowcase.client.gui.widget.ingame;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.pipeline.RenderPipeline;
 import dev.hephaestus.glowcase.client.gui.screen.ingame.ColorPickerIncludedScreen;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Element;
+import net.minecraft.client.gui.ScreenRect;
+import net.minecraft.client.gui.render.state.SimpleGuiElementRenderState;
 import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
 import net.minecraft.client.gui.widget.PressableWidget;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
+import net.minecraft.client.texture.TextureSetup;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import org.apache.commons.compress.utils.Lists;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix3x2fStack;
 import org.joml.Matrix4f;
 import java.awt.*;
 import java.util.ArrayList;
@@ -142,21 +147,21 @@ public class ColorPickerWidget extends PressableWidget {
 		if(!visible) return;
 		updateHSL();
 
-		context.setShaderColor(1f, 1f, 1f, this.alpha);
-		RenderSystem.enableBlend();
-		RenderSystem.enableDepthTest();
+		//context.setShaderColor(1f, 1f, 1f, this.alpha);
+		/*RenderSystem.enableBlend();
+		RenderSystem.enableDepthTest();*/
 
 		int x = this.getX();
 		int y = this.getY();
-		int z = 1; //prevent z-fighting with other widgets
+		int z = 1;
 		int width = this.getWidth();
 		int height = this.getHeight();
 
 		//background
-		context.drawTexture(Identifier.ofVanilla("textures/gui/inworld_menu_list_background.png"), x, y, z, 0, 0, width, height, 32, 32);
+		context.drawTexture(RenderPipelines.GUI_TEXTURED, Identifier.ofVanilla("textures/gui/inworld_menu_list_background.png"), x, y, 0, 0, width, height, 32, 32);
 		if(this.isSelected()) {
 			//outline
-			drawOutline(context, x, y, width, height, z, Color.white);
+			drawOutline(context, x, y, width, height, Color.white);
 		}
 
 		//color picker stuff
@@ -164,7 +169,7 @@ public class ColorPickerWidget extends PressableWidget {
 		this.confirmButton.setPosition(x + width - presetSize - presetPadding, y + height - presetSize - 2, z + 1, presetSize, presetSize + 2);
 		this.cancelButton.setPosition(x + width - presetSize * 2 - presetPadding * 2 - 1, y + height - presetSize - 2, z + 1, presetSize, presetSize + 2);
 
-		drawColorPreview(context, previewX, previewY, previewWidth, previewHeight, z + 1);
+		drawColorPreview(context, previewX, previewY, previewWidth, previewHeight);
 		drawSatLight(context, satLightX, satLightY, satLightWidth, satLightHeight, z + 3);
 		drawHueBar(context, hueX, hueY, hueWidth, hueHeight, z + 1);
 		if(this.includePresets) {
@@ -176,7 +181,7 @@ public class ColorPickerWidget extends PressableWidget {
 		this.confirmButton.renderWidget(context, mouseX, mouseY, delta);
 		this.cancelButton.renderWidget(context, mouseX, mouseY, delta);
 
-		context.setShaderColor(1f, 1f, 1f, 1f);
+		//context.setShaderColor(1f, 1f, 1f, 1f);
 	}
 
 	public void updatePositions() {
@@ -204,8 +209,8 @@ public class ColorPickerWidget extends PressableWidget {
 		presetY = hueY + hueHeight + presetPadding;
 	}
 
-	private void drawColorPreview(DrawContext context, int x, int y, int width, int height, int z) {
-		context.fill(x, y, x + width, y + height, z, this.color.getRGB());
+	private void drawColorPreview(DrawContext context, int x, int y, int width, int height) {
+		context.fill(x, y, x + width, y + height, this.color.getRGB());
 	}
 
 	private void drawHueBar(DrawContext context, int x, int y, int width, int height, int z) {
@@ -215,15 +220,18 @@ public class ColorPickerWidget extends PressableWidget {
 
 		int maxColors = colors.length - 1;
 		for (int color = 0; color < maxColors; color++) {
-			sidewaysGradient(context,
+			sidewaysGradient(
+				context,
 				x + ((float) width / maxColors * (color)), y,
 				(float) width / maxColors, height,
-				z + 1, colors[color], colors[color + 1]);
+				z + 1,
+				colors[color], colors[color + 1]
+			);
 		}
 
 		//thumb
-		drawOutline(context, hueThumbX - 3, y - 1, 6, height + 2, z + 2, Color.white);
-		context.fill(hueThumbX - 3, y - 1, hueThumbX + 3, y + height + 1, z + 1, getRgbFromHueThumb());
+		drawOutline(context, hueThumbX - 3, y - 1, 6, height + 2, Color.white);
+		context.fill(hueThumbX - 3, y - 1, hueThumbX + 3, y + height + 1, getRgbFromHueThumb());
 	}
 
 	private void drawSatLight(DrawContext context, int x, int y, int width, int height, int z) {
@@ -231,30 +239,53 @@ public class ColorPickerWidget extends PressableWidget {
 		sidewaysGradient(context, x, y, width, height, z, Color.white.getRGB(), getRgbFromHueThumb());
 
 		//transparent to black, top to bottom
-		context.fillGradient(x, y, x + width, y + height, z, 0x00000000, Color.black.getRGB());
+		context.fillGradient(x, y, x + width, y + height, 0x00000000, Color.black.getRGB());
 
 		//thumb
-		context.fill(satLightThumbX - 4, satLightThumbY - 4, satLightThumbX + 4, satLightThumbY + 4, z + 1, this.color.getRGB());
-		drawOutline(context, satLightThumbX - 4, satLightThumbY - 4, 8, 8, z + 2, Color.white);
+		context.fill(satLightThumbX - 4, satLightThumbY - 4, satLightThumbX + 4, satLightThumbY + 4, this.color.getRGB());
+		drawOutline(context, satLightThumbX - 4, satLightThumbY - 4, 8, 8, Color.white);
 	}
 
-	private void drawOutline(DrawContext context, int x, int y, int width, int height, int z, Color outlineColor) {
+	private void drawOutline(DrawContext context, int x, int y, int width, int height, Color outlineColor) {
 		int color = outlineColor.getRGB();
-		context.fill(x, y, x + width, y + 1, z, color);
-		context.fill(x, y, x + 1, y + height, z, color);
-		context.fill(x + width, y, x + width - 1, y + height, z, color);
-		context.fill(x, y + height, x + width, y + height - 1, z, color);
+		context.fill(x, y, x + width, y + 1, color);
+		context.fill(x, y, x + 1, y + height, color);
+		context.fill(x + width, y, x + width - 1, y + height, color);
+		context.fill(x, y + height, x + width, y + height - 1, color);
 	}
 
 	private void sidewaysGradient(DrawContext context, float x, float y, float width, float height, float z, int startColor, int endColor) {
-		RenderLayer layer = RenderLayer.getGui();
-		VertexConsumer vertexConsumer = context.getVertexConsumers().getBuffer(layer);
+		context.state.addSimpleElement(new SimpleGuiElementRenderState() {
 
-		Matrix4f matrix = context.getMatrices().peek().getPositionMatrix();
-		vertexConsumer.vertex(matrix, x, y, z).color(startColor);
-		vertexConsumer.vertex(matrix, x, y + height, z).color(startColor);
-		vertexConsumer.vertex(matrix, x + width, y + height, z).color(endColor);
-		vertexConsumer.vertex(matrix, x + width, y, z).color(endColor);
+			@Override
+			public @Nullable ScreenRect bounds() {
+				return null;
+			}
+
+			@Override
+			public void setupVertices(VertexConsumer vertices, float depth) {
+				Matrix3x2fStack matrix = context.getMatrices();
+				vertices.vertex(matrix, x, y, z).color(startColor);
+				vertices.vertex(matrix, x, y + height, z).color(startColor);
+				vertices.vertex(matrix, x + width, y + height, z).color(endColor);
+				vertices.vertex(matrix, x + width, y, z).color(endColor);
+			}
+
+			@Override
+			public RenderPipeline pipeline() {
+				return RenderPipelines.GUI_TEXTURED;
+			}
+
+			@Override
+			public TextureSetup textureSetup() {
+				return TextureSetup.empty();
+			}
+
+			@Override
+			public @Nullable ScreenRect scissorArea() {
+				return null;
+			}
+		});
 	}
 
 	private void drawPresets(DrawContext context, int mouseX, int mouseY, float delta, int x, int y, int height, int z, int presetSize, int presetsPerLine, int presetPadding) {

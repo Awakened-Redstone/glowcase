@@ -2,6 +2,7 @@ package dev.hephaestus.glowcase.client.gui.widget.ingame;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.text.Text;
@@ -34,7 +35,7 @@ public class IconButtonWidget extends ButtonWidget {
 		if(this.hoverIcon != null && this.isMouseOver(mouseX, mouseY)) {
 			drawnIcon = this.hoverIcon;
 		}
-		context.drawGuiTexture(drawnIcon, this.getX(), this.getY(), z, this.iconWidth, this.iconHeight);
+		context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, drawnIcon, this.getX(), this.getY(), this.iconWidth, this.iconHeight);
 	}
 
 	public void setPosition(int x, int y, int z, int size, int iconSize) {

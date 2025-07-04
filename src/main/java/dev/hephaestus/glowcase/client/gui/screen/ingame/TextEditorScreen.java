@@ -1,12 +1,21 @@
 package dev.hephaestus.glowcase.client.gui.screen.ingame;
 
+import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import dev.hephaestus.glowcase.client.gui.widget.ingame.ColorPickerWidget;
 import eu.pb4.placeholders.api.parsers.tag.TagRegistry;
 import eu.pb4.placeholders.api.parsers.tag.TextTag;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.render.BufferBuilder;
+import net.minecraft.client.render.BuiltBuffer;
+import net.minecraft.client.render.VertexFormats;
+import net.minecraft.client.util.BufferAllocator;
 import net.minecraft.client.util.SelectionManager;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+import org.joml.Matrix3x2fStack;
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -14,6 +23,8 @@ import java.util.Comparator;
 public abstract class TextEditorScreen extends GlowcaseScreen implements ColorPickerIncludedScreen {
 	private ButtonWidget colorText;
 	private ButtonWidget[] widgets = new ButtonWidget[0];
+
+	private final GpuBuffer cursorBuffer = createCursorBuffer("Glowcase Text Editor cursor vertex buffer");
 
 	abstract SelectionManager getSelectionManager();
 
@@ -135,5 +146,30 @@ public abstract class TextEditorScreen extends GlowcaseScreen implements ColorPi
 	@Override
 	public void insertFormattingTag(Formatting formatting) {
 		insertTag(TagRegistry.SAFE.getTag(formatting.getName()), false);
+	}
+
+	public static GpuBuffer createCursorBuffer(final String name) {
+		return RenderSystem.getDevice().createBuffer(() -> name, 16, 16 * VertexFormats.POSITION_TEXTURE.getVertexSize());
+	}
+
+	public static void renderCursor(Matrix3x2fStack matrices, GpuBuffer buffer, int x, int y, int width) {
+		try (BufferAllocator bufferAllocator = BufferAllocator.method_72201(VertexFormats.POSITION_TEXTURE.getVertexSize() * 4 * 4)) {
+			BufferBuilder bufferBuilder = new BufferBuilder(bufferAllocator, VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
+			/*RenderSystem.enableColorLogicOp();
+			RenderSystem.logicOp(GlStateManager.LogicOp.OR_REVERSE);*/
+			bufferBuilder.vertex(matrices, x, y + 9, 0.0F).color(0, 0, 255, 255);
+			bufferBuilder.vertex(matrices, x + width, y + 9, 0.0F).color(0, 0, 255, 255);
+			bufferBuilder.vertex(matrices, x + width, y, 0.0F).color(0, 0, 255, 255);
+			bufferBuilder.vertex(matrices, x, y, 0.0F).color(0, 0, 255, 255);
+
+			try (BuiltBuffer builtBuffer = bufferBuilder.end()) {
+				RenderSystem.getDevice().createCommandEncoder().writeToBuffer(buffer.slice(), builtBuffer.getBuffer());
+			}
+			//RenderSystem.disableColorLogicOp();
+		}
+	}
+	
+	protected void renderCursor(DrawContext context, int x, int y, int width) {
+		renderCursor(context.getMatrices(), cursorBuffer, x, y, width);
 	}
 }

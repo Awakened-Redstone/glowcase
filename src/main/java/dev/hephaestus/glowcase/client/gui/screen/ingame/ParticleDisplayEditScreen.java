@@ -73,8 +73,8 @@ public class ParticleDisplayEditScreen extends GlowcaseScreen {
 
 		particleId.setMaxLength(9999);
 
-		String optionsString = effectToTag(blockEntity.particle, lookup.getOps(NbtOps.INSTANCE)).asString();
-		if (optionsString.startsWith("{}")) optionsString = "";
+		String optionsString = effectToTag(blockEntity.particle, lookup.getOps(NbtOps.INSTANCE)).toString();
+		if (optionsString.equals("{}")) optionsString = "";
 
 		particleId.setText(Registries.PARTICLE_TYPE.getId(blockEntity.particle.getType()) + optionsString);
 
@@ -319,17 +319,14 @@ public class ParticleDisplayEditScreen extends GlowcaseScreen {
 
 		RegistryKey<ParticleType<?>> key = RegistryKey.of(RegistryKeys.PARTICLE_TYPE, id);
 
-		Optional<RegistryEntry.Reference<ParticleType<?>>> optionalType =
-			lookup.getWrapperOrThrow(RegistryKeys.PARTICLE_TYPE).getOptional(key);
+		Optional<RegistryEntry.Reference<ParticleType<?>>> optionalType = lookup.getOrThrow(RegistryKeys.PARTICLE_TYPE).getOptional(key);
 		if (optionalType.isEmpty()) return;
 
 		ParticleType<ParticleEffect> type = (ParticleType<ParticleEffect>) optionalType.get().value();
 
 		NbtCompound nbtCompound;
 		try {
-			nbtCompound = paramStart == -1 ?
-				new NbtCompound() :
-				StringNbtReader.parse(idText.substring(paramStart));
+			nbtCompound = paramStart == -1 ? new NbtCompound() : StringNbtReader.readCompound(idText.substring(paramStart));
 		} catch (CommandSyntaxException e) {
 			return;
 		}

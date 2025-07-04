@@ -3,24 +3,19 @@ package dev.hephaestus.glowcase.client.render.block.entity;
 import dev.hephaestus.glowcase.Glowcase;
 import dev.hephaestus.glowcase.block.entity.TextBlockEntity;
 import dev.hephaestus.glowcase.client.util.BlockEntityRenderUtil;
-import dev.hephaestus.glowcase.mixin.client.TextRendererAccessor;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.GlyphRenderer;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.font.TextRenderer.TextLayerType;
 import net.minecraft.client.render.LightmapTextureManager;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.block.entity.BlockEntityRendererFactory;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.state.property.Properties;
-import net.minecraft.text.Style;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RotationAxis;
-import org.joml.Matrix4f;
+import net.minecraft.util.math.Vec3d;
 import org.joml.Quaternionf;
 
 public class TextBlockEntityRenderer extends BakedBlockEntityRenderer<TextBlockEntity> {
@@ -37,7 +32,7 @@ public class TextBlockEntityRenderer extends BakedBlockEntityRenderer<TextBlockE
 	}
 
 	@Override
-	public void renderUnbaked(TextBlockEntity entity, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, int overlay) {
+	public void renderUnbaked(TextBlockEntity entity, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, int overlay, Vec3d cameraPos) {
 		Entity camera = MinecraftClient.getInstance().getCameraEntity();
 		if (camera != null && entity.viewDistance >= 0) {
 			double dx = camera.getX() - (entity.getPos().getX() + 0.5);
@@ -68,7 +63,7 @@ public class TextBlockEntityRenderer extends BakedBlockEntityRenderer<TextBlockE
 	}
 
 	@Override
-	public void renderBaked(TextBlockEntity entity, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, int overlay) {
+	public void renderBaked(TextBlockEntity entity, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, int overlay, Vec3d cameraPos) {
 		Entity camera = MinecraftClient.getInstance().getCameraEntity();
 		if (camera != null && entity.viewDistance >= 0) {
 			double dx = camera.getX() - (entity.getPos().getX() + 0.5);
@@ -127,6 +122,8 @@ public class TextBlockEntityRenderer extends BakedBlockEntityRenderer<TextBlockE
 			matrices.push();
 			matrices.translate(dX, 0, 0);
 
+			TextRenderer.Drawer drawer = (TextRenderer.Drawer) textRenderer.prepare(entity.lines.get(i).asOrderedText(), 0, i * 12, entity.color, entity.shadow, entity.backgroundColor);
+
 			if (entity.backgroundColor != 0 && width > 0) {
 				matrices.push();
 				// Annoyingly, it kept getting rendered backwards.
@@ -134,11 +131,14 @@ public class TextBlockEntityRenderer extends BakedBlockEntityRenderer<TextBlockE
 				matrices.multiply(new Quaternionf().rotateLocalY(MathHelper.PI));
 				matrices.translate(-width, 0, -0.025D);
 
-				drawFillRect(matrices, vertexConsumers, (int) width + 5, (i + 1) * 12 - 2, -5, i * 12 - 2, entity.backgroundColor);
+				//TODO: add rectangle?
+
+				//drawFillRect(matrices, vertexConsumers, (int) width + 5, (i + 1) * 12 - 2, -5, i * 12 - 2, entity.backgroundColor);
 				matrices.pop();
 			}
 
-			textRenderer.draw(entity.lines.get(i), 0, i * 12, entity.color, entity.shadow, matrices.peek().getPositionMatrix(), vertexConsumers, TextLayerType.NORMAL, 0, LightmapTextureManager.MAX_LIGHT_COORDINATE);
+			drawer.draw(TextRenderer.GlyphDrawer.drawing(vertexConsumers, matrices.peek().getPositionMatrix(), TextLayerType.NORMAL, LightmapTextureManager.MAX_LIGHT_COORDINATE));
+			//textRenderer.draw(entity.lines.get(i), 0, i * 12, entity.color, entity.shadow, matrices.peek().getPositionMatrix(), vertexConsumers, TextLayerType.NORMAL, 0, LightmapTextureManager.MAX_LIGHT_COORDINATE);
 
 			matrices.pop();
 		}
@@ -154,7 +154,7 @@ public class TextBlockEntityRenderer extends BakedBlockEntityRenderer<TextBlockE
 		float alpha = (float) (color >> 24 & 255) / 255.0F;
 
 		// Horrible up to no good hack to get proper translucency sorting :3
-		final GlyphRenderer renderer = ((TextRendererAccessor) MinecraftClient.getInstance().textRenderer)
+		/*final GlyphRenderer renderer = ((TextRendererAccessor) MinecraftClient.getInstance().textRenderer)
 			.invokeGetFontStorage(Style.DEFAULT_FONT_ID).getRectangleRenderer();
 
 		final RenderLayer renderLayer = renderer.getLayer(TextLayerType.NORMAL);
@@ -163,6 +163,6 @@ public class TextBlockEntityRenderer extends BakedBlockEntityRenderer<TextBlockE
 
 		renderer.drawRectangle(new GlyphRenderer.Rectangle(
 			x1, y1, x2, y2, 0.2f, red, green, blue, alpha
-		), matrix, consumer, LightmapTextureManager.MAX_LIGHT_COORDINATE);
+		), matrix, consumer, LightmapTextureManager.MAX_LIGHT_COORDINATE);*/
 	}
 }

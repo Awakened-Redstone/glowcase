@@ -14,11 +14,12 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.state.property.Properties;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.RotationAxis;
+import net.minecraft.util.math.Vec3d;
 
 public record RecipeBlockEntityRenderer(BlockEntityRendererFactory.Context context) implements BlockEntityRenderer<RecipeBlockEntity> {
 	private static final Identifier ITEM_TEXTURE = Glowcase.id("textures/item/recipe_block.png");
 
-	public void render(RecipeBlockEntity entity, float f, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, int overlay) {
+	public void render(RecipeBlockEntity entity, float f, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, int overlay, Vec3d cameraPos) {
 		if (GlowcaseClient.EMI_LOADED) {
 			matrices.push();
 			matrices.translate(0.5D, 0.5D, 0.5D);

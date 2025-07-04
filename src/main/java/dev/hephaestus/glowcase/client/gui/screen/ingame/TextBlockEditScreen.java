@@ -1,8 +1,6 @@
 package dev.hephaestus.glowcase.client.gui.screen.ingame;
 
 import com.google.common.primitives.Floats;
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
 import dev.hephaestus.glowcase.block.entity.TextBlockEntity;
 import dev.hephaestus.glowcase.client.gui.widget.ingame.ColorPickerWidget;
 import dev.hephaestus.glowcase.client.util.ColorUtil;
@@ -16,11 +14,6 @@ import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.CheckboxWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.render.BufferBuilder;
-import net.minecraft.client.render.BufferRenderer;
-import net.minecraft.client.render.Tessellator;
-import net.minecraft.client.render.VertexFormat;
-import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.util.SelectionManager;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.MathHelper;
@@ -212,8 +205,8 @@ public class TextBlockEditScreen extends TextEditorScreen {
 		if (this.client != null) {
 			super.render(context, mouseX, mouseY, delta);
 
-			context.getMatrices().push();
-			context.getMatrices().translate(0, 40 + 2 * this.width / 100F, 0);
+			context.getMatrices().pushMatrix();
+			context.getMatrices().translate(0, 40 + 2 * this.width / 100F);
 			for (int i = 0; i < this.textBlockEntity.lines.size(); ++i) {
 				var text = this.currentRow == i ? Text.literal(this.textBlockEntity.getRawLine(i)) : this.textBlockEntity.lines.get(i);
 
@@ -257,20 +250,11 @@ public class TextBlockEditScreen extends TextEditorScreen {
 
 				if (caretStart != caretEnd) {
 					int endX = startX + this.client.textRenderer.getWidth(line.substring(selectionStart, selectionEnd));
-					Tessellator tessellator = Tessellator.getInstance();
-					BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
-					RenderSystem.enableColorLogicOp();
-					RenderSystem.logicOp(GlStateManager.LogicOp.OR_REVERSE);
-					bufferBuilder.vertex(context.getMatrices().peek().getPositionMatrix(), startX, caretEndY, 0.0F).color(0, 0, 255, 255);
-					bufferBuilder.vertex(context.getMatrices().peek().getPositionMatrix(), endX, caretEndY, 0.0F).color(0, 0, 255, 255);
-					bufferBuilder.vertex(context.getMatrices().peek().getPositionMatrix(), endX, caretStartY, 0.0F).color(0, 0, 255, 255);
-					bufferBuilder.vertex(context.getMatrices().peek().getPositionMatrix(), startX, caretStartY, 0.0F).color(0, 0, 255, 255);
-					BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
-					RenderSystem.disableColorLogicOp();
+					renderCursor(context, startX, caretStartY, this.client.textRenderer.getWidth(line.substring(selectionStart, selectionEnd)));
 				}
 			}
 
-			context.getMatrices().pop();
+			context.getMatrices().popMatrix();
 			context.drawTextWithShadow(client.textRenderer, Text.translatable("gui.glowcase.scale_value", this.textBlockEntity.scale), 7, 7, 0xFFFFFFFF);
 		}
 	}

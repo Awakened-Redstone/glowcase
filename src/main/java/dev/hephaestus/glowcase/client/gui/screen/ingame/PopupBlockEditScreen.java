@@ -1,7 +1,6 @@
 package dev.hephaestus.glowcase.client.gui.screen.ingame;
 
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.buffers.GpuBuffer;
 import dev.hephaestus.glowcase.block.entity.HyperlinkBlockEntity;
 import dev.hephaestus.glowcase.block.entity.PopupBlockEntity;
 import dev.hephaestus.glowcase.block.entity.TextBlockEntity;
@@ -10,11 +9,6 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.render.BufferBuilder;
-import net.minecraft.client.render.BufferRenderer;
-import net.minecraft.client.render.Tessellator;
-import net.minecraft.client.render.VertexFormat;
-import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.util.SelectionManager;
 import net.minecraft.text.Text;
 import net.minecraft.text.TextColor;
@@ -31,6 +25,8 @@ public class PopupBlockEditScreen extends GlowcaseScreen {
 	private TextFieldWidget titleEntryWidget;
 	private ButtonWidget changeAlignment;
 	private TextFieldWidget colorEntryWidget;
+
+	private final GpuBuffer cursorBuffer = TextEditorScreen.createCursorBuffer("Glowcase Popup Editor cursor vertex buffer");
 
 	public PopupBlockEditScreen(PopupBlockEntity popupBlockEntity) {
 		this.popupBlockEntity = popupBlockEntity;
@@ -107,8 +103,8 @@ public class PopupBlockEditScreen extends GlowcaseScreen {
 		if (this.client != null) {
 			super.render(context, mouseX, mouseY, delta);
 
-			context.getMatrices().push();
-			context.getMatrices().translate(0, 40 + 2 * this.width / 100F, 0);
+			context.getMatrices().pushMatrix();
+			context.getMatrices().translate(0, 40 + 2 * this.width / 100F);
 			for (int i = 0; i < this.popupBlockEntity.lines.size(); ++i) {
 				var text = this.currentRow == i ? Text.literal(this.popupBlockEntity.getRawLine(i)) : this.popupBlockEntity.lines.get(i);
 
@@ -152,20 +148,11 @@ public class PopupBlockEditScreen extends GlowcaseScreen {
 
 				if (caretStart != caretEnd) {
 					int endX = startX + this.client.textRenderer.getWidth(line.substring(selectionStart, selectionEnd));
-					Tessellator tessellator = Tessellator.getInstance();
-					BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
-					RenderSystem.enableColorLogicOp();
-					RenderSystem.logicOp(GlStateManager.LogicOp.OR_REVERSE);
-					bufferBuilder.vertex(context.getMatrices().peek().getPositionMatrix(), startX, caretEndY, 0.0F).color(0, 0, 255, 255);
-					bufferBuilder.vertex(context.getMatrices().peek().getPositionMatrix(), endX, caretEndY, 0.0F).color(0, 0, 255, 255);
-					bufferBuilder.vertex(context.getMatrices().peek().getPositionMatrix(), endX, caretStartY, 0.0F).color(0, 0, 255, 255);
-					bufferBuilder.vertex(context.getMatrices().peek().getPositionMatrix(), startX, caretStartY, 0.0F).color(0, 0, 255, 255);
-					BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
-					RenderSystem.disableColorLogicOp();
+					TextEditorScreen.renderCursor(context.getMatrices(), cursorBuffer, startX, caretStartY, textRenderer.getWidth(line.substring(selectionStart, selectionEnd)));
 				}
 			}
 
-			context.getMatrices().pop();
+			context.getMatrices().popMatrix();
 		}
 	}
 
