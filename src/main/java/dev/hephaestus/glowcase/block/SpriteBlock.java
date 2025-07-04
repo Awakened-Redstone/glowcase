@@ -8,13 +8,14 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.BlockWithEntity;
 import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.component.type.TooltipDisplayComponent;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemPlacementContext;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.tooltip.TooltipType;
 import net.minecraft.state.StateManager;
-import net.minecraft.state.property.DirectionProperty;
+import net.minecraft.state.property.EnumProperty;
 import net.minecraft.state.property.Properties;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
@@ -24,15 +25,11 @@ import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 public class SpriteBlock extends WaterloggableGlowcaseBlock {
 	public static final MapCodec<SpriteBlock> CODEC = createCodec(SpriteBlock::new);
-	public static final DirectionProperty FACING = Properties.FACING;
-
-
-	public SpriteBlock() {
-		this(defaultSettings());
-	}
+	public static final EnumProperty<Direction> FACING = Properties.FACING;
 
 	public SpriteBlock(AbstractBlock.Settings settings) {
 		super(settings);
@@ -76,10 +73,10 @@ public class SpriteBlock extends WaterloggableGlowcaseBlock {
 	}
 
 	@Override
-	public void appendTooltip(ItemStack itemStack, Item.TooltipContext context, List<Text> tooltip, TooltipType options) {
-		tooltip.add(Text.translatable("block.glowcase.sprite_block.tooltip.0").formatted(Formatting.GRAY));
-		tooltip.add(Text.translatable("block.glowcase.generic.tooltip").formatted(Formatting.DARK_GRAY));
-		tooltip.add(Text.translatable("block.glowcase.sprite_block.tooltip.1").formatted(Formatting.DARK_GRAY));
+	public void appendTooltip(ItemStack stack, Item.TooltipContext context, TooltipDisplayComponent displayComponent, Consumer<Text> textConsumer, TooltipType type) {
+		textConsumer.accept(Text.translatable("block.glowcase.sprite_block.tooltip.0").formatted(Formatting.GRAY));
+		textConsumer.accept(Text.translatable("block.glowcase.generic.tooltip").formatted(Formatting.DARK_GRAY));
+		textConsumer.accept(Text.translatable("block.glowcase.sprite_block.tooltip.1").formatted(Formatting.DARK_GRAY));
 	}
 
 	@Override

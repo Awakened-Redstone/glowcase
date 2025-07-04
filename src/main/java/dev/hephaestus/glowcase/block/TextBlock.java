@@ -9,12 +9,14 @@ import net.minecraft.block.BlockWithEntity;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.NbtComponent;
+import net.minecraft.component.type.TooltipDisplayComponent;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.tooltip.TooltipType;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtString;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
@@ -23,13 +25,11 @@ import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Consumer;
 
 public class TextBlock extends RotatableBlock {
 	public static final MapCodec<TextBlock> CODEC = createCodec(TextBlock::new);
-
-	public TextBlock() {
-		super();
-	}
 
 	public TextBlock(AbstractBlock.Settings settings) {
 		super(settings);
@@ -61,17 +61,19 @@ public class TextBlock extends RotatableBlock {
 	}
 
 	@Override
-	public void appendTooltip(ItemStack stack, Item.TooltipContext context, List<Text> tooltip, TooltipType options) {
-		tooltip.add(Text.translatable("block.glowcase.text_block.tooltip.0").formatted(Formatting.GRAY));
-		tooltip.add(Text.translatable("block.glowcase.generic.tooltip").formatted(Formatting.DARK_GRAY));
-		tooltip.add(Text.translatable("block.glowcase.text_block.tooltip.1").formatted(Formatting.DARK_GRAY));
+	public void appendTooltip(ItemStack stack, Item.TooltipContext context, TooltipDisplayComponent displayComponent, Consumer<Text> textConsumer, TooltipType type) {
+		textConsumer.accept(Text.translatable("block.glowcase.text_block.tooltip.0").formatted(Formatting.GRAY));
+		textConsumer.accept(Text.translatable("block.glowcase.generic.tooltip").formatted(Formatting.DARK_GRAY));
+		textConsumer.accept(Text.translatable("block.glowcase.text_block.tooltip.1").formatted(Formatting.DARK_GRAY));
 		NbtComponent component = stack.get(DataComponentTypes.BLOCK_ENTITY_DATA);
 		if (component == null) return;
-		NbtCompound nbt = component.getNbt();
+		NbtCompound nbt = component.getNbt(); //TODO: use codecs
 		if (nbt == null) return;
-		for (NbtElement element : nbt.getList("lines", NbtElement.STRING_TYPE)) {
-			if (element instanceof NbtString line && !line.asString().isBlank()) {
-				tooltip.add(Text.literal((line.asString().length() > 20 ? "%s...\"" : "%s").formatted(line.asString().substring(0, Math.min(line.asString().length(), 20)))).formatted(Formatting.DARK_PURPLE));
+		for (NbtElement element : nbt.getList("lines").orElse(new NbtList())) {
+			Optional<String> line = element.asString();
+			String lineContent;
+			if (line.isPresent() && !(lineContent = line.get()).isBlank()) {
+				textConsumer.accept(Text.literal((lineContent.length() > 20 ? "%s...\"" : "%s").formatted(lineContent.substring(0, Math.min(lineContent.length(), 20)))).formatted(Formatting.DARK_PURPLE));
 			}
 		}
 	}

@@ -4,7 +4,7 @@ import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Waterloggable;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.fluid.Fluids;
@@ -15,8 +15,11 @@ import net.minecraft.state.property.BooleanProperty;
 import net.minecraft.state.property.Properties;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.random.Random;
 import net.minecraft.world.BlockView;
 import net.minecraft.world.WorldAccess;
+import net.minecraft.world.WorldView;
+import net.minecraft.world.tick.ScheduledTickView;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -25,34 +28,23 @@ import org.jetbrains.annotations.Nullable;
 public abstract class WaterloggableGlowcaseBlock extends GlowcaseBlock implements Waterloggable {
 	public static final BooleanProperty WATERLOGGED = Properties.WATERLOGGED;
 
-	public WaterloggableGlowcaseBlock() {
-		this(defaultSettings());
-	}
-
 	public WaterloggableGlowcaseBlock(AbstractBlock.Settings settings) {
 		super(settings);
 		this.setDefaultState(this.getDefaultState().with(WATERLOGGED, false));
 	}
 
 	@Override
-	protected boolean isTransparent(final BlockState state, final BlockView world, final BlockPos pos) {
+	protected boolean isTransparent(BlockState state) {
 		return state.getFluidState().isEmpty();
 	}
 
 	@Override
-	protected BlockState getStateForNeighborUpdate(
-		final BlockState state,
-		final Direction direction,
-		final BlockState neighborState,
-		final WorldAccess world,
-		final BlockPos pos,
-		final BlockPos neighborPos
-	) {
+	protected BlockState getStateForNeighborUpdate(BlockState state, WorldView world, ScheduledTickView tickView, BlockPos pos, Direction direction, BlockPos neighborPos, BlockState neighborState, Random random) {
 		if (state.get(WATERLOGGED)) {
-			world.scheduleFluidTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world));
+			tickView.scheduleFluidTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world));
 		}
 
-		return super.getStateForNeighborUpdate(state, direction, neighborState, world, pos, neighborPos);
+		return super.getStateForNeighborUpdate(state, world, tickView, pos, direction, neighborPos, neighborState, random);
 	}
 
 	@Override
@@ -72,26 +64,15 @@ public abstract class WaterloggableGlowcaseBlock extends GlowcaseBlock implement
 	}
 
 	@Override
-	public ItemStack tryDrainFluid(
-		@Nullable final PlayerEntity player,
-		final WorldAccess world,
-		final BlockPos pos,
-		final BlockState state
-	) {
-		if (!GlowcaseBlock.canEditGlowcase(player, pos)) {
+	public ItemStack tryDrainFluid(@Nullable LivingEntity drainer, WorldAccess world, BlockPos pos, BlockState state) {
+		if (!GlowcaseBlock.canEditGlowcase(drainer, pos)) {
 			return ItemStack.EMPTY;
 		}
-		return Waterloggable.super.tryDrainFluid(player, world, pos, state);
+		return Waterloggable.super.tryDrainFluid(drainer, world, pos, state);
 	}
 
 	@Override
-	public boolean canFillWithFluid(
-		@Nullable final PlayerEntity player,
-		final BlockView world,
-		final BlockPos pos,
-		final BlockState state,
-		final Fluid fluid
-	) {
-		return GlowcaseBlock.canEditGlowcase(player, pos) && Waterloggable.super.canFillWithFluid(player, world, pos, state, fluid);
+	public boolean canFillWithFluid(@Nullable LivingEntity filler, BlockView world, BlockPos pos, BlockState state, Fluid fluid) {
+		return GlowcaseBlock.canEditGlowcase(filler, pos) && Waterloggable.super.canFillWithFluid(filler, world, pos, state, fluid);
 	}
 }
