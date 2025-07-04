@@ -36,9 +36,9 @@ public record RecipeBlockEntityRenderer(BlockEntityRendererFactory.Context conte
 				case CENTER -> matrices.translate(0D, 0D, 0D);
 			}
 
-			boolean rendered = EmiWorldRenderUtils.renderRecipe(matrices, entity.recipe, entity.getPos());
+//			boolean rendered = EmiWorldRenderUtils.renderRecipe(matrices, entity.recipe, entity.getPos());
 			matrices.pop();
-			if (rendered) return;
+//			if (rendered) return;
 		}
 
 		if (BlockEntityRenderUtil.shouldRenderPlaceholder(entity.getPos())) BlockEntityRenderUtil.renderPlaceholderWithBlockRotation(entity, ITEM_TEXTURE, 1F, matrices, vertexConsumers, entity.zOffset == TextBlockEntity.ZOffset.CENTER ? 0.01F : entity.zOffset == TextBlockEntity.ZOffset.FRONT ? 0.4F : -0.4F);
