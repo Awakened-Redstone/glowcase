@@ -47,8 +47,8 @@ public class TextBlockEntity extends GlowcaseBlockEntity {
 		view.putInt("color", this.color);
 		view.putInt("background_color", this.backgroundColor);
 
-		view.putString("text_alignment", this.textAlignment.name());
-		view.putString("z_offset", this.zOffset.name());
+		view.put("text_alignment", TextAlignment.CODEC, this.textAlignment);
+		view.put("z_offset", ZOffset.CODEC, this.zOffset);
 		view.putBoolean("shadow", this.shadow);
 		view.putFloat("viewDistance", this.viewDistance);
 
@@ -72,7 +72,7 @@ public class TextBlockEntity extends GlowcaseBlockEntity {
 		this.textAlignment = view.read("text_alignment", TextAlignment.CODEC).orElse(TextAlignment.CENTER);
 		this.zOffset = view.read("z_offset", ZOffset.CODEC).orElse(ZOffset.CENTER);
 		this.viewDistance = view.getFloat("viewDistance", -1);
-		this.lines = view.read("lines", TextCodecs.CODEC.listOf()).orElseGet(List::of);
+		this.lines = new ArrayList<>(view.read("lines", TextCodecs.CODEC.listOf()).orElseGet(List::of));
 		this.renderDirty = true;
 	}
 

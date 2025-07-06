@@ -50,8 +50,7 @@ public abstract class DisplayBlockEntity extends GlowcaseBlockEntity {
 	@Override
 	protected void readData(ReadView view) {
 		super.readData(view);
-		Optional<DisplayBlockSettings> settings = view.read("display", DisplayBlockSettings.CODEC);
-		loadSettings(settings.orElseGet(DisplayBlockSettings::new));
+		loadSettings(view.read("display", DisplayBlockSettings.CODEC).orElseGet(DisplayBlockSettings::new));
 	}
 
 	public Vector3f getOffset() {

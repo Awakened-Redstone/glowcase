@@ -21,7 +21,7 @@ public class PopupBlockEntity extends GlowcaseBlockEntity {
 	public String title = "";
 	public List<Text> lines = new ArrayList<>();
 	public TextBlockEntity.TextAlignment textAlignment = TextBlockEntity.TextAlignment.CENTER;
-	public int color = 0xFFFFFF;
+	public int color = 0xFFFFFFFF;
 	public boolean renderDirty = true;
 
 	public PopupBlockEntity(BlockPos pos, BlockState state) {
@@ -36,7 +36,7 @@ public class PopupBlockEntity extends GlowcaseBlockEntity {
 		view.putString("title", this.title);
 		view.putInt("color", this.color);
 
-		view.putString("text_alignment", this.textAlignment.name());
+		view.put("text_alignment", TextBlockEntity.TextAlignment.CODEC, this.textAlignment);
 
 		view.put("lines", TextCodecs.CODEC.listOf(), this.lines);
 	}
