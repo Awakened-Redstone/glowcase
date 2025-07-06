@@ -126,6 +126,7 @@ public abstract class GlowcaseBlock extends BlockWithEntity {
 		return Settings.create()
 			.nonOpaque()
 			.dropsNothing()
+			.noBlockBreakParticles()
 			.strength(-1, Float.MAX_VALUE);
 	}
 }
