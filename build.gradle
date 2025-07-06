@@ -47,6 +47,12 @@ loom {
 	accessWidenerPath.set(file("src/main/resources/glowcase.accesswidener"))
 }
 
+fabricApi {
+	configureDataGeneration {
+		client = true
+	}
+}
+
 processResources {
 	final Map<String, String> meta = [
 		version       : version,
