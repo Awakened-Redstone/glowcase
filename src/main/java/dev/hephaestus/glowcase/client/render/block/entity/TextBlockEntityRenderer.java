@@ -55,7 +55,7 @@ public class TextBlockEntityRenderer extends BakedBlockEntityRenderer<TextBlockE
 
 		if (entity.renderDirty) {
 			entity.renderDirty = false;
-			Manager.markForRebuild(entity.getPos());
+			BakedBlockEntityRenderer.Manager.markForRebuild(entity.getPos());
 		}
 
 		if (entity.getWorld() == null || entity.getWorld().getBlockState(entity.getPos()).isAir()) return;
@@ -63,7 +63,7 @@ public class TextBlockEntityRenderer extends BakedBlockEntityRenderer<TextBlockE
 	}
 
 	@Override
-	public void renderBaked(TextBlockEntity entity, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, int overlay, Vec3d cameraPos) {
+	public void renderBaked(TextBlockEntity entity, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, int overlay) {
 		Entity camera = MinecraftClient.getInstance().getCameraEntity();
 		if (camera != null && entity.viewDistance >= 0) {
 			double dx = camera.getX() - (entity.getPos().getX() + 0.5);

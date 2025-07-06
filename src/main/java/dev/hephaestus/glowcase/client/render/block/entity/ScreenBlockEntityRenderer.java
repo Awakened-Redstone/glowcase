@@ -195,7 +195,7 @@ public record ScreenBlockEntityRenderer(BlockEntityRendererFactory.Context conte
 		matrices.translate(0, textRenderer.fontHeight * 4, 0f);
 
 		MutableText hint = Text.translatableWithFallback("gui.glowcase.screen.hint." + code, "");
-		String error_msg = Text.translatable("gui.glowcase.screen.error", "" + code).append(" ").append(hint).getString();
+		String error_msg = Text.translatable("gui.glowcase.screen.error", code).append(" ").append(hint).getString();
 		lines = wrap(error_msg, font_scale, txt_width, textRenderer);
 
 		moved_lines = 0;

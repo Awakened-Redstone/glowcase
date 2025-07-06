@@ -50,11 +50,6 @@ public class TextBlockEditScreen extends TextEditorScreen {
 	}
 
 	@Override
-	public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
-		renderDarkening(context);
-	}
-
-	@Override
 	public void init() {
 		super.init();
 
@@ -204,6 +199,7 @@ public class TextBlockEditScreen extends TextEditorScreen {
 	public void render(DrawContext context, int mouseX, int mouseY, float delta) {
 		if (this.client != null) {
 			super.render(context, mouseX, mouseY, delta);
+			context.applyBlur();
 
 			context.getMatrices().pushMatrix();
 			context.getMatrices().translate(0, 40 + 2 * this.width / 100F);
@@ -239,10 +235,9 @@ public class TextBlockEditScreen extends TextEditorScreen {
 
 
 				int caretStartY = this.currentRow * 12;
-				int caretEndY = this.currentRow * 12 + 9;
 				if (this.ticksSinceOpened / 6 % 2 == 0 && !this.isFocusedTextActive()) {
 					if (selectionStart < line.length()) {
-						context.fill(startX, caretStartY, startX + 1, caretEndY, 0xCCFFFFFF);
+						context.fill(startX, caretStartY, startX + 1, caretStartY + 9, 0xCCFFFFFF);
 					} else {
 						context.drawText(client.textRenderer, "_", startX, this.currentRow * 12, 0xFFFFFFFF, false);
 					}
@@ -250,12 +245,13 @@ public class TextBlockEditScreen extends TextEditorScreen {
 
 				if (caretStart != caretEnd) {
 					int endX = startX + this.client.textRenderer.getWidth(line.substring(selectionStart, selectionEnd));
-					renderCursor(context, startX, caretStartY, this.client.textRenderer.getWidth(line.substring(selectionStart, selectionEnd)));
+					context.drawSelection(startX, caretStartY, endX, caretStartY + 9);
 				}
 			}
 
 			context.getMatrices().popMatrix();
 			context.drawTextWithShadow(client.textRenderer, Text.translatable("gui.glowcase.scale_value", this.textBlockEntity.scale), 7, 7, 0xFFFFFFFF);
+			colorPickerWidget.render(context, mouseX, mouseY, delta);
 		}
 	}
 

@@ -31,7 +31,7 @@ public record OutlineBlockEntityRenderer(BlockEntityRendererFactory.Context cont
 		VertexRendering.drawOutline(
 			matrices, vertexConsumers.getBuffer(RenderLayer.getLines()),
 			VoxelShapes.cuboid(x, y, z, x + width, y + height, z + depth),
-			0, 0, 0, entity.color
+			0, 0, 0, entity.color | 0xFF000000
 		);
 
 		if (entity.scale.equals(Vec3i.ZERO) || BlockEntityRenderUtil.shouldRenderPlaceholder(entity.getPos())) BlockEntityRenderUtil.renderBillboardPlaceholder(entity, ITEM_TEXTURE, 1.0F, matrices, vertexConsumers, context.getRenderDispatcher().camera);

@@ -1,6 +1,5 @@
 package dev.hephaestus.glowcase.client.gui.screen.ingame;
 
-import com.mojang.blaze3d.buffers.GpuBuffer;
 import dev.hephaestus.glowcase.block.entity.HyperlinkBlockEntity;
 import dev.hephaestus.glowcase.block.entity.PopupBlockEntity;
 import dev.hephaestus.glowcase.block.entity.TextBlockEntity;
@@ -26,15 +25,8 @@ public class PopupBlockEditScreen extends GlowcaseScreen {
 	private ButtonWidget changeAlignment;
 	private TextFieldWidget colorEntryWidget;
 
-	private final GpuBuffer cursorBuffer = TextEditorScreen.createCursorBuffer("Glowcase Popup Editor cursor vertex buffer");
-
 	public PopupBlockEditScreen(PopupBlockEntity popupBlockEntity) {
 		this.popupBlockEntity = popupBlockEntity;
-	}
-
-	@Override
-	public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
-		renderDarkening(context);
 	}
 
 	@Override
@@ -137,10 +129,9 @@ public class PopupBlockEditScreen extends GlowcaseScreen {
 
 
 				int caretStartY = this.currentRow * 12;
-				int caretEndY = this.currentRow * 12 + 9;
 				if (this.ticksSinceOpened / 6 % 2 == 0 && !this.titleEntryWidget.isActive() && !this.colorEntryWidget.isActive()) {
 					if (selectionStart < line.length()) {
-						context.fill(startX, caretStartY, startX + 1, caretEndY, 0xCCFFFFFF);
+						context.fill(startX, caretStartY, startX + 1, caretStartY + 9, 0xCCFFFFFF);
 					} else {
 						context.drawText(client.textRenderer, "_", startX, this.currentRow * 12, 0xFFFFFFFF, false);
 					}
@@ -148,7 +139,7 @@ public class PopupBlockEditScreen extends GlowcaseScreen {
 
 				if (caretStart != caretEnd) {
 					int endX = startX + this.client.textRenderer.getWidth(line.substring(selectionStart, selectionEnd));
-					TextEditorScreen.renderCursor(context.getMatrices(), cursorBuffer, startX, caretStartY, textRenderer.getWidth(line.substring(selectionStart, selectionEnd)));
+					context.drawSelection(startX, caretStartY, endX, caretStartY + 9);
 				}
 			}
 

@@ -1,21 +1,7 @@
 package dev.hephaestus.glowcase.client;
 
 import dev.hephaestus.glowcase.Glowcase;
-import dev.hephaestus.glowcase.client.render.block.entity.BakedBlockEntityRenderer;
-import dev.hephaestus.glowcase.client.render.block.entity.ConfigLinkBlockEntityRenderer;
-import dev.hephaestus.glowcase.client.render.block.entity.EntityDisplayBlockEntityRenderer;
-import dev.hephaestus.glowcase.client.render.block.entity.HyperlinkBlockEntityRenderer;
-import dev.hephaestus.glowcase.client.render.block.entity.ItemAcceptorBlockEntityRenderer;
-import dev.hephaestus.glowcase.client.render.block.entity.ItemDisplayBlockEntityRenderer;
-import dev.hephaestus.glowcase.client.render.block.entity.ItemProviderBlockEntityRenderer;
-import dev.hephaestus.glowcase.client.render.block.entity.OutlineBlockEntityRenderer;
-import dev.hephaestus.glowcase.client.render.block.entity.ParticleDisplayBlockEntityRenderer;
-import dev.hephaestus.glowcase.client.render.block.entity.PopupBlockEntityRenderer;
-import dev.hephaestus.glowcase.client.render.block.entity.RecipeBlockEntityRenderer;
-import dev.hephaestus.glowcase.client.render.block.entity.ScreenBlockEntityRenderer;
-import dev.hephaestus.glowcase.client.render.block.entity.SoundPlayerBlockEntityRenderer;
-import dev.hephaestus.glowcase.client.render.block.entity.SpriteBlockEntityRenderer;
-import dev.hephaestus.glowcase.client.render.block.entity.TextBlockEntityRenderer;
+import dev.hephaestus.glowcase.client.render.block.entity.*;
 import dev.hephaestus.glowcase.client.render.item.ItemHandRenderer;
 import dev.hephaestus.glowcase.client.render.item.NoteItemHandRenderer;
 import dev.hephaestus.glowcase.client.render.item.TabletItemHandRenderer;

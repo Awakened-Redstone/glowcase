@@ -1,6 +1,5 @@
 package dev.hephaestus.glowcase.client.gui.screen.ingame;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.datafixers.util.Pair;
 import dev.hephaestus.glowcase.Glowcase;
 import dev.hephaestus.glowcase.block.entity.ScreenBlockEntity;
@@ -139,7 +138,10 @@ public class TabletEditScreen extends GlowcaseScreen {
 	@Override
 	public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
 		super.renderBackground(context, mouseX, mouseY, delta);
-		context.drawTexture(RenderPipelines.GUI_TEXTURED, TEXTURE, width / 2 - BG_WIDTH / 2, height / 2 - BG_HEIGHT / 2, 0, 0, BG_WIDTH, BG_HEIGHT, BG_WIDTH, BG_HEIGHT);
+		context.drawTexture(RenderPipelines.GUI_TEXTURED, TEXTURE,
+			width / 2 - BG_WIDTH / 2, height / 2 - BG_HEIGHT / 2,
+			0, 0, BG_WIDTH, BG_HEIGHT, BG_WIDTH, BG_WIDTH
+		);
 
 		// Render Slideshow
 
@@ -165,7 +167,7 @@ public class TabletEditScreen extends GlowcaseScreen {
 			height / 2 - BG_HEIGHT / 2 + SCREEN_Y1,
 			0, 160,
 			IMG_WIDTH - 1, (SCREEN_Y2 - SCREEN_Y1) + 1,
-			IMG_WIDTH - 1, (SCREEN_Y2 - SCREEN_Y1) + 1
+			BG_WIDTH, BG_WIDTH
 		);
 
 		// Right
@@ -175,7 +177,7 @@ public class TabletEditScreen extends GlowcaseScreen {
 			height / 2 - BG_HEIGHT / 2 + SCREEN_Y1,
 			BG_WIDTH - IMG_WIDTH + 1, 160,
 			IMG_WIDTH - 1, (SCREEN_Y2 - SCREEN_Y1) + 1,
-			IMG_WIDTH - 1, (SCREEN_Y2 - SCREEN_Y1) + 1
+			BG_WIDTH, BG_WIDTH
 		);
 
 		// Current slide

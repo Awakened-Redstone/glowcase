@@ -23,13 +23,12 @@ public record GlowcaseTintSource(int defaultColor) implements TintSource {
 	@Override
 	public int getTint(ItemStack stack, @Nullable ClientWorld world, @Nullable LivingEntity user) {
 		NbtComponent component = stack.get(DataComponentTypes.BLOCK_ENTITY_DATA);
-		if (component == null) return 0xFFFFFF;
-		NbtCompound nbt = component.getNbt();
-		if (nbt != null) {
-			int color = nbt.getInt("color", 0);
-			if (color != 0 && color != 0xFFFFFF) return color;
-		}
-		return 0xAA00AA;
+		if (component == null) return defaultColor;
+
+		NbtCompound nbt = component.copyNbt();
+		int color = nbt.getInt("color", 0);
+		if (color != 0 && color != defaultColor) return color;
+		return 0xFFAA00AA;
 	}
 
 	@Override

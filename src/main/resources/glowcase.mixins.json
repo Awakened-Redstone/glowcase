@@ -13,6 +13,8 @@
 		"client.KeyboardMixin",
 		"client.MixinHeldItemRenderer",
 		"client.MixinInGameHud",
+		"client.MultiPhaseRenderLayerAccessor",
+		"client.RenderLayerMultiPhaseParametersAccessor",
 		"client.TextRendererAccessor",
 		"client.TextureManagerAccessor"
 	],
