@@ -4,7 +4,6 @@ import com.mojang.blaze3d.pipeline.RenderPipeline;
 import dev.hephaestus.glowcase.Glowcase;
 import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.RenderPhase;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 
@@ -12,22 +11,15 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public abstract class GlowcaseRenderLayers extends RenderLayer {
-	public static RenderPhase.Layering GLOWCASE_POLYGON_OFFSET_LAYERING = new Layering("glowcase_polygon_offset_layering", () -> {
-		/*RenderSystem.polygonOffset(-1, -1.0F);
-		RenderSystem.enablePolygonOffset();*/
-	}, () -> {
-		/*RenderSystem.polygonOffset(0.0F, 0.0F);
-		RenderSystem.disablePolygonOffset();*/
-	});
-
 	public static final Function<Boolean, RenderPipeline> SCREEN_PROGRAM = Util.memoize((culling) -> RenderPipelines.register(
-		RenderPipeline.builder(RenderPipelines.TEXT_SNIPPET)
+		RenderPipeline.builder(RenderPipelines.TEXT_SNIPPET, RenderPipelines.FOG_SNIPPET)
 			.withLocation(Glowcase.id("pipeline/screen"))
 			.withVertexShader("core/rendertype_text")
 			.withFragmentShader("core/rendertype_text")
 			.withCull(culling)
 			.withSampler("Sampler0")
 			.withSampler("Sampler2")
+			.withDepthBias(-1.0F, -1.0F)
 			.build()
 	));
 
@@ -52,10 +44,9 @@ public abstract class GlowcaseRenderLayers extends RenderLayer {
 			true,
 			SCREEN_PROGRAM.apply(culling),
 			MultiPhaseParameters.builder()
-			.texture(new Texture(texture, false))
-			.lightmap(ENABLE_LIGHTMAP)
-			.layering(GLOWCASE_POLYGON_OFFSET_LAYERING)
-			.build(false));
+				.texture(new Texture(texture, false))
+				.lightmap(ENABLE_LIGHTMAP)
+				.build(false));
 	});
 
 	public GlowcaseRenderLayers(String name, int size, boolean hasCrumbling, boolean translucent, Runnable begin, Runnable end) {
