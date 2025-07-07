@@ -37,7 +37,7 @@ public record PopupBlockEntityRenderer(BlockEntityRendererFactory.Context contex
 			matrices.translate(-context.getTextRenderer().getWidth(entity.title) / 2F, -4, -scale);
 			// Fixes shadow being rendered in front of actual text
 			matrices.scale(1, 1, -1);
-			context.getTextRenderer().draw(entity.title, 0, 0, 0xFFFFFF, true, matrices.peek().getPositionMatrix(), vertexConsumers, TextLayerType.NORMAL, 0, LightmapTextureManager.MAX_LIGHT_COORDINATE);
+			context.getTextRenderer().draw(entity.title, 0, 0, 0xFFFFFFFF, true, matrices.peek().getPositionMatrix(), vertexConsumers, TextLayerType.NORMAL, 0, LightmapTextureManager.MAX_LIGHT_COORDINATE);
 		}
 		matrices.pop();
 	}
