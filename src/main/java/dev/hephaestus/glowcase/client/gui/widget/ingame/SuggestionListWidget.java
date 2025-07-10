@@ -15,42 +15,42 @@ import net.minecraft.util.Util;
 import org.jetbrains.annotations.NotNull;
 
 public class SuggestionListWidget<T> extends ClickableWidget {
-    private final TextRenderer textRenderer;
-    private final MinecraftClient client;
+	private final TextRenderer textRenderer;
+	private final MinecraftClient client;
 
-    private final List<T> suggestions = new ArrayList<>();
+	private final List<T> suggestions = new ArrayList<>();
 	private @NotNull String filter = "";
-    private int scrollOffset = 0;
+	private int scrollOffset = 0;
 
-    private final int baseLineHeight;
-    private final int padding;
-    private final int maxRows;
+	private final int baseLineHeight;
+	private final int padding;
+	private final int maxRows;
 	/**
 	 * The approximate maximum number of characters that'll fit inside the width of this widget
 	 */
 	private int characterWidth;
 
-    private final Consumer<T> onSelect;
-    private final Function<T, String> toStringFunction;
-    
-    public boolean draggingScrollbar = false;
-    private int scrollbarDragStartY = 0;
-    private int initialScrollOffset = 0;
+	private final Consumer<T> onSelect;
+	private final Function<T, String> toStringFunction;
 
-    public SuggestionListWidget(TextRenderer textRenderer, int x, int y, int width, int height, int baseLineHeight, int padding, int maxRows, Consumer<T> onSelect, Function<T, String> toStringFunction) {
-        super(x, y, width, height, Text.empty());
+	public boolean draggingScrollbar = false;
+	private int scrollbarDragStartY = 0;
+	private int initialScrollOffset = 0;
 
-        this.client = MinecraftClient.getInstance();
+	public SuggestionListWidget(TextRenderer textRenderer, int x, int y, int width, int height, int baseLineHeight, int padding, int maxRows, Consumer<T> onSelect, Function<T, String> toStringFunction) {
+		super(x, y, width, height, Text.empty());
 
-        this.baseLineHeight = baseLineHeight;
-        this.padding = padding;
-        this.maxRows = maxRows;
-        this.onSelect = onSelect;
-        this.toStringFunction = toStringFunction;
-        this.textRenderer = textRenderer;
+		this.client = MinecraftClient.getInstance();
+
+		this.baseLineHeight = baseLineHeight;
+		this.padding = padding;
+		this.maxRows = maxRows;
+		this.onSelect = onSelect;
+		this.toStringFunction = toStringFunction;
+		this.textRenderer = textRenderer;
 		this.characterWidth = 1;
 		setWidth(width);
-    }
+	}
 
 	@Override
 	public void setWidth(int width) {
@@ -65,350 +65,332 @@ public class SuggestionListWidget<T> extends ClickableWidget {
 	}
 
 	// update the suggestion list based on filter
-    public void updateSuggestions(List<T> newSuggestions, String filter, boolean strict) {
-        suggestions.clear();
+	public void updateSuggestions(List<T> newSuggestions, String filter, boolean strict) {
+		suggestions.clear();
 		this.filter = filter;
 
-        for (T suggestion : newSuggestions) {
+		for (T suggestion : newSuggestions) {
 			if (suggestion == null) {
 				throw new NullPointerException("A suggestion can not be null!");
 			}
-            String text = toStringFunction.apply(suggestion);
+			String text = toStringFunction.apply(suggestion);
 
-            if (strict ? text.startsWith(filter) : text.contains(filter)) {
-                suggestions.add(suggestion);
-            }
-        }
+			if (strict ? text.startsWith(filter) : text.contains(filter)) {
+				suggestions.add(suggestion);
+			}
+		}
 
-        // if there is only 1 suggestion & it's equal to input, hide the list
-        if (suggestions.size() == 1 && toStringFunction.apply(suggestions.getFirst()).equals(filter)) {
-            suggestions.clear();
-        }
+		// if there is only 1 suggestion & it's equal to input, hide the list
+		if (suggestions.size() == 1 && toStringFunction.apply(suggestions.getFirst()).equals(filter)) {
+			suggestions.clear();
+		}
 
-        scrollOffset = 0;
-    }
+		scrollOffset = 0;
+	}
 
-    @Override
-    public void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
-        if (suggestions.isEmpty()) return;
+	@Override
+	public void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
+		if (suggestions.isEmpty()) return;
 
-		int fbWidth = client.getWindow().getFramebufferWidth();
-		int fbHeight = client.getWindow().getFramebufferHeight();
-        
-        context.getMatrices().pushMatrix();
-        context.getMatrices().translate(0, 0);
-        
-        int adjustedLineHeight = baseLineHeight + padding * 2;
-        int rows = Math.min(suggestions.size(), maxRows);
-        int dynamicHeight = rows * adjustedLineHeight;
+		context.getMatrices().pushMatrix();
+		context.getMatrices().translate(0, 0);
 
-        boolean scrollable = suggestions.size() > maxRows;
-        int totalLines = suggestions.size();
+		int adjustedLineHeight = baseLineHeight + padding * 2;
+		int rows = Math.min(suggestions.size(), maxRows);
+		int dynamicHeight = rows * adjustedLineHeight;
+
+		boolean scrollable = suggestions.size() > maxRows;
+		int totalLines = suggestions.size();
 
 		int listWidth = scrollable ? this.getWidth() - 5 - 10 : this.getWidth();
 
-        context.enableScissor(this.getX(), this.getY(), this.getX() + listWidth, this.getY() + dynamicHeight);
-        
-        float blurValue = (float) MinecraftClient.getInstance().options.getMenuBackgroundBlurrinessValue();
-        if (blurValue >= 1.0F) {
-            client.gameRenderer.renderBlur();
-        }
+		context.enableScissor(this.getX(), this.getY(), this.getX() + listWidth, this.getY() + dynamicHeight);
+		context.fill(this.getX(), this.getY(), this.getX() + listWidth, this.getY() + dynamicHeight, 0x90000000);
 
-        client.getFramebuffer().resize(512, 512);
-        context.fill(this.getX(), this.getY(), this.getX() + listWidth, this.getY() + dynamicHeight, 0x90000000);
+		drawOutline(context, this.getX(), this.getY(), listWidth, dynamicHeight, 0xFFFFFFFF);
 
-        drawOutline(context, this.getX(), this.getY(), listWidth, dynamicHeight, 0xFFFFFFFF);
+		if (scrollOffset > totalLines - rows) {
+			scrollOffset = Math.max(0, totalLines - rows);
+		}
 
-        if (scrollOffset > totalLines - rows) {
-            scrollOffset = Math.max(0, totalLines - rows);
-        }
-        
-        // render each suggestion
-        for (int i = 0; i < rows; i++) {
-            int suggestionIndex = i + scrollOffset;
-            if (suggestionIndex >= totalLines) break;
-            
-            T suggestion = suggestions.get(suggestionIndex);
-            String suggestionText = toStringFunction.apply(suggestion);
-            int suggestionY = getY() + i * adjustedLineHeight;
-            
-            // highlight hovered suggestion
-            if (mouseX >= this.getX() && mouseX <= this.getX() + listWidth && mouseY >= suggestionY && mouseY < suggestionY + adjustedLineHeight) {
-                context.fill(this.getX(), suggestionY, this.getX() + listWidth, suggestionY + adjustedLineHeight, 0xFF217C08);
-                drawOutline(context, this.getX(), suggestionY, listWidth, adjustedLineHeight, 0xFFFFFFFF);
-            }
+		// render each suggestion
+		for (int i = 0; i < rows; i++) {
+			int suggestionIndex = i + scrollOffset;
+			if (suggestionIndex >= totalLines) break;
 
-            // detect if the text is too long AND if the item is hovered, then scroll, otherwise don't
-            boolean suggestionHovered = (mouseX >= this.getX() && mouseX <= this.getX() + listWidth && mouseY >= suggestionY && mouseY < suggestionY + adjustedLineHeight);
-            if (textRenderer.getWidth(suggestionText) > (this.getWidth() - padding - 20)) {
-                drawOverflowText(context, textRenderer, Text.literal(suggestionText), this.getX() + padding, suggestionY + padding - 2, this.getX() + listWidth - padding, suggestionY + adjustedLineHeight, 0xFFFFFF, suggestionHovered);
-            } else {
-                context.drawTextWithShadow(textRenderer, Text.literal(suggestionText), this.getX() + padding, suggestionY + padding + 1, 0xFFFFFF);
-            }
-        }
+			T suggestion = suggestions.get(suggestionIndex);
+			String suggestionText = toStringFunction.apply(suggestion);
+			int suggestionY = getY() + i * adjustedLineHeight;
 
-        context.disableScissor();
+			// highlight hovered suggestion
+			if (mouseX >= this.getX() && mouseX <= this.getX() + listWidth && mouseY >= suggestionY && mouseY < suggestionY + adjustedLineHeight) {
+				context.fill(this.getX(), suggestionY, this.getX() + listWidth, suggestionY + adjustedLineHeight, 0xFF217C08);
+				drawOutline(context, this.getX(), suggestionY, listWidth, adjustedLineHeight, 0xFFFFFFFF);
+			}
 
-        // scrollbar thingy
-        if (scrollable) {
-            int scrollbarWidth = 10;
+			// detect if the text is too long AND if the item is hovered, then scroll, otherwise don't
+			boolean suggestionHovered = (mouseX >= this.getX() && mouseX <= this.getX() + listWidth && mouseY >= suggestionY && mouseY < suggestionY + adjustedLineHeight);
+			if (textRenderer.getWidth(suggestionText) > (this.getWidth() - padding - 20)) {
+				drawOverflowText(context, textRenderer, Text.literal(suggestionText), this.getX() + padding, suggestionY + padding - 2, this.getX() + listWidth - padding, suggestionY + adjustedLineHeight, 0xFFFFFFFF, suggestionHovered);
+			} else {
+				context.drawTextWithShadow(textRenderer, Text.literal(suggestionText), this.getX() + padding, suggestionY + padding + 1, 0xFFFFFFFF);
+			}
+		}
 
-            int sbX = getX() + listWidth + 5;
-            int sbY = getY();
+		context.disableScissor();
 
-            int scrollbarHeight = dynamicHeight;
-            int scrollBarBgColor = 0x90000000;
 
-            context.enableScissor(sbX, sbY, sbX + scrollbarWidth, sbY + scrollbarHeight);
+		// scrollbar thingy
+		if (scrollable) {
+			int scrollbarWidth = 10;
 
-            float blurScrollbar = (float) client.options.getMenuBackgroundBlurrinessValue();
-            if (blurScrollbar >= 1.0F) {
-                client.gameRenderer.renderBlur();
-            }
+			int sbX = getX() + listWidth + 5;
+			int sbY = getY();
 
-			client.getFramebuffer().resize(512, 512);
+			int scrollBarBgColor = 0x90000000;
 
-            context.fill(sbX, sbY, sbX + scrollbarWidth, sbY + scrollbarHeight, scrollBarBgColor);
-            context.disableScissor();
+			context.enableScissor(sbX, sbY, sbX + scrollbarWidth, sbY + dynamicHeight);
+			context.fill(sbX, sbY, sbX + scrollbarWidth, sbY + dynamicHeight, scrollBarBgColor);
+			context.disableScissor();
 
-            drawOutline(context, sbX, sbY, scrollbarWidth, scrollbarHeight, 0xFFFFFFFF);
+			drawOutline(context, sbX, sbY, scrollbarWidth, dynamicHeight, 0xFFFFFFFF);
 
-            float visibleRatio = (float) rows / totalLines;
-            int handleHeight = Math.max((int)(visibleRatio * (dynamicHeight - 2 * 2)), 4);
+			float visibleRatio = (float) rows / totalLines;
+			int handleHeight = Math.max((int) (visibleRatio * (dynamicHeight - 2 * 2)), 4);
 
-            int availableScroll = totalLines - rows;
-            int handleYOffset = availableScroll > 0 ? (int)(((float)scrollOffset / availableScroll) * ((dynamicHeight - 2 * 2) - handleHeight)) : 0;
-            int handleX = sbX + 2;
-            int handleY = sbY + 2 + handleYOffset;
-            int handleWidth = scrollbarWidth - 2 * 2;
-            
-            context.fill(handleX, handleY, handleX + handleWidth, handleY + handleHeight, 0xFFFFFFFF);
-        }
+			int availableScroll = totalLines - rows;
+			int handleYOffset = availableScroll > 0 ? (int) (((float) scrollOffset / availableScroll) * ((dynamicHeight - 2 * 2) - handleHeight)) : 0;
+			int handleX = sbX + 2;
+			int handleY = sbY + 2 + handleYOffset;
+			int handleWidth = scrollbarWidth - 2 * 2;
 
-		client.getFramebuffer().resize(fbWidth, fbHeight);
-        context.getMatrices().popMatrix();
-    }
+			context.fill(handleX, handleY, handleX + handleWidth, handleY + handleHeight, 0xFFFFFFFF);
+		}
 
-    @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        boolean scrollable = suggestions.size() > maxRows;
+		context.getMatrices().popMatrix();
+	}
 
-        int adjustedLineHeight = baseLineHeight + padding * 2;
-        int listWidth = scrollable ? this.getWidth() - 5 - 10 : this.getWidth();
+	@Override
+	public boolean mouseClicked(double mouseX, double mouseY, int button) {
+		boolean scrollable = suggestions.size() > maxRows;
 
-        int relativeY = (int)mouseY - this.getY();
-        int clickedIndex = relativeY / adjustedLineHeight + scrollOffset;
+		int adjustedLineHeight = baseLineHeight + padding * 2;
+		int listWidth = scrollable ? this.getWidth() - 5 - 10 : this.getWidth();
 
-        if (scrollable) {
-            int sbX = getX() + listWidth + 5;
-            int sbY = getY();
-            int scrollbarHeight = Math.min(suggestions.size(), maxRows) * adjustedLineHeight;
+		int relativeY = (int) mouseY - this.getY();
+		int clickedIndex = relativeY / adjustedLineHeight + scrollOffset;
 
-            if (mouseX >= sbX && mouseX <= sbX + 10 && mouseY >= sbY && mouseY <= sbY + scrollbarHeight) {
-                draggingScrollbar = true;
+		if (scrollable) {
+			int sbX = getX() + listWidth + 5;
+			int sbY = getY();
+			int scrollbarHeight = Math.min(suggestions.size(), maxRows) * adjustedLineHeight;
 
-                scrollbarDragStartY = (int) mouseY;
-                initialScrollOffset = scrollOffset;
+			if (mouseX >= sbX && mouseX <= sbX + 10 && mouseY >= sbY && mouseY <= sbY + scrollbarHeight) {
+				draggingScrollbar = true;
 
-                return true;
-            }
-        }
+				scrollbarDragStartY = (int) mouseY;
+				initialScrollOffset = scrollOffset;
 
-        if (mouseX >= this.getX() && mouseX <= this.getX() + listWidth) {
-            if (clickedIndex >= 0 && clickedIndex < suggestions.size()) {
-                onSelect.accept(suggestions.get(clickedIndex));
-                return true;
-            }
-        }
+				return true;
+			}
+		}
 
-        return false;
-    }
+		if (mouseX >= this.getX() && mouseX <= this.getX() + listWidth) {
+			if (clickedIndex >= 0 && clickedIndex < suggestions.size()) {
+				onSelect.accept(suggestions.get(clickedIndex));
+				return true;
+			}
+		}
 
-    @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
-        if (draggingScrollbar) {
-            int adjustedLineHeight = baseLineHeight + padding * 2;
-            int rows = Math.min(suggestions.size(), maxRows);
+		return false;
+	}
 
-            int dynamicHeight = rows * adjustedLineHeight;
-            int totalLines = suggestions.size();
-            int availableScroll = totalLines - maxRows;
+	@Override
+	public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+		if (draggingScrollbar) {
+			int adjustedLineHeight = baseLineHeight + padding * 2;
+			int rows = Math.min(suggestions.size(), maxRows);
 
-            float visibleRatio = (float) maxRows / totalLines;
-            int handleHeight = Math.max((int)(visibleRatio * (dynamicHeight - 2 * 2)), 4);
+			int dynamicHeight = rows * adjustedLineHeight;
+			int totalLines = suggestions.size();
+			int availableScroll = totalLines - maxRows;
 
-            int dragDelta = (int) (mouseY - scrollbarDragStartY);
+			float visibleRatio = (float) maxRows / totalLines;
+			int handleHeight = Math.max((int) (visibleRatio * (dynamicHeight - 2 * 2)), 4);
 
-            if ((dynamicHeight - 2 * 2) - handleHeight > 0) {
-                int newOffset = initialScrollOffset + (int) ((float) dragDelta / ((dynamicHeight - 2 * 2) - handleHeight) * availableScroll);
-                scrollOffset = Math.max(0, Math.min(newOffset, availableScroll));
-            }
+			int dragDelta = (int) (mouseY - scrollbarDragStartY);
 
-            return true;
-        }
+			if ((dynamicHeight - 2 * 2) - handleHeight > 0) {
+				int newOffset = initialScrollOffset + (int) ((float) dragDelta / ((dynamicHeight - 2 * 2) - handleHeight) * availableScroll);
+				scrollOffset = Math.max(0, Math.min(newOffset, availableScroll));
+			}
 
-        return false;
-    }
+			return true;
+		}
 
-    @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        draggingScrollbar = false;
-        return super.mouseReleased(mouseX, mouseY, button);
-    }
+		return false;
+	}
 
-    @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
-        int rows = Math.min(suggestions.size(), maxRows);
-        
-        int totalLines = suggestions.size();
-        int maxLines = rows;
-        scrollOffset -= (int) verticalAmount;
-        
-        if (scrollOffset < 0) scrollOffset = 0;
-        if (scrollOffset > totalLines - maxLines) scrollOffset = Math.max(0, totalLines - maxLines);
-        
-        return true;
-    }
-    
-    @Override
-    protected void appendClickableNarrations(net.minecraft.client.gui.screen.narration.NarrationMessageBuilder builder) {}
-    
-    @Override
-    public boolean isMouseOver(double mouseX, double mouseY) {
-        int adjustedLineHeight = baseLineHeight + padding * 2;
-        int rows = Math.min(suggestions.size(), maxRows);
-        int dynamicHeight = rows * adjustedLineHeight;
+	@Override
+	public boolean mouseReleased(double mouseX, double mouseY, int button) {
+		draggingScrollbar = false;
+		return super.mouseReleased(mouseX, mouseY, button);
+	}
 
-        boolean scrollable = suggestions.size() > maxRows;
-        int listWidth = scrollable ? this.getWidth() - 5 - 10 : this.getWidth();
+	@Override
+	public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
+		int rows = Math.min(suggestions.size(), maxRows);
 
-        boolean overList = (mouseX >= this.getX() && mouseX <= this.getX() + listWidth && mouseY >= this.getY() && mouseY < this.getY() + dynamicHeight);
-        boolean overScrollbar = false;
+		int totalLines = suggestions.size();
+		int maxLines = rows;
+		scrollOffset -= (int) verticalAmount;
 
-        if (scrollable) {
-            int sbX = this.getX() + listWidth + 5;
-            int sbY = this.getY();
+		if (scrollOffset < 0) scrollOffset = 0;
+		if (scrollOffset > totalLines - maxLines) scrollOffset = Math.max(0, totalLines - maxLines);
 
-            overScrollbar = (mouseX >= sbX && mouseX <= sbX + 10 && mouseY >= sbY && mouseY <= sbY + dynamicHeight);
-        }
+		return true;
+	}
 
-        return overList || overScrollbar;
-    }
+	@Override
+	protected void appendClickableNarrations(net.minecraft.client.gui.screen.narration.NarrationMessageBuilder builder) {
+	}
 
-    private void drawOutline(DrawContext context, int x, int y, int width, int height, int color) {
-        context.fill(x, y, x + width, y + 1, color);
-        context.fill(x, y + height - 1, x + width, y + height, color);
-        context.fill(x, y, x + 1, y + height, color);
-        context.fill(x + width - 1, y, x + width, y + height, color);
-    }
+	@Override
+	public boolean isMouseOver(double mouseX, double mouseY) {
+		int adjustedLineHeight = baseLineHeight + padding * 2;
+		int rows = Math.min(suggestions.size(), maxRows);
+		int dynamicHeight = rows * adjustedLineHeight;
 
-    // similar to drawScrollableText but not centered
-    private void drawOverflowText(DrawContext context, TextRenderer textRenderer, Text text, int startX, int startY, int endX, int endY, int color, boolean hovered) {
-        int textRendererWidth = textRenderer.getWidth(text);
-        int availableWidth = endX - startX;
-        int y = startY + ((endY - startY) - 9) / 2;
-    
-        // if hovered, we scroll
-        if (hovered) {
-            int extra = textRendererWidth - availableWidth;
-            double time = Util.getMeasuringTimeMs() / 1000.0;
-            double period = Math.max(extra / 8.0, 2.0);
-            double scroll = 0.5 - 0.5 * Math.cos(2 * Math.PI * time / period);
-            int offset = (int)(scroll * extra);
-            
-            context.enableScissor(startX, startY, endX, endY);
-            context.drawTextWithShadow(textRenderer, text, startX - offset, y, color);
-            context.disableScissor();
-        } else {
-            // otherwise try to shorten the text as much as possible
-            String rawText = text.getString();
+		boolean scrollable = suggestions.size() > maxRows;
+		int listWidth = scrollable ? this.getWidth() - 5 - 10 : this.getWidth();
 
-            String collapsedText;
-            int colonIndex = rawText.indexOf(':');
+		boolean overList = (mouseX >= this.getX() && mouseX <= this.getX() + listWidth && mouseY >= this.getY() && mouseY < this.getY() + dynamicHeight);
+		boolean overScrollbar = false;
 
-            // if no colon, prob nothing to collapse
-            if (colonIndex == -1) {
-                collapsedText = rawText;
-            } else {
-                int lastSlashIndex = rawText.lastIndexOf('/');
+		if (scrollable) {
+			int sbX = this.getX() + listWidth + 5;
+			int sbY = this.getY();
 
-                // if no slash after colon, leave as-is
-                if (lastSlashIndex == -1 || lastSlashIndex < colonIndex) {
-                    collapsedText = rawText;
-                } else {
-                    String namespace = rawText.substring(0, colonIndex + 1);
-                    String lastPart = rawText.substring(lastSlashIndex + 1);
+			overScrollbar = (mouseX >= sbX && mouseX <= sbX + 10 && mouseY >= sbY && mouseY <= sbY + dynamicHeight);
+		}
 
-                    collapsedText = namespace + ".../" + lastPart;
-                }
-            }
+		return overList || overScrollbar;
+	}
 
-            String finalText;
-            if (filter.trim().isEmpty()) {
-                finalText = collapsedText;  
-            } else if (filter.length() >= (rawText.indexOf(':') + 1)) {
-                if (rawText.lastIndexOf('/') == -1) {
-                    //... and no slash, put ... before
-                    finalText = "..." + collapsedText.substring(rawText.indexOf(':') + 1);
-                } else {
-                    // no namespace
-                    finalText = collapsedText.substring(rawText.indexOf(':') + 1);
-                }
-            } else if (filter.length() > 1) {
-                int removeCount = Math.min(filter.length(), collapsedText.length());
-                finalText = "..." + collapsedText.substring(removeCount);
-            } else {
-                finalText = collapsedText;
-            }
+	private void drawOutline(DrawContext context, int x, int y, int width, int height, int color) {
+		context.fill(x, y, x + width, y + 1, color);
+		context.fill(x, y + height - 1, x + width, y + height, color);
+		context.fill(x, y, x + 1, y + height, color);
+		context.fill(x + width - 1, y, x + width, y + height, color);
+	}
 
-            if (filter.trim().isEmpty()) {
-                int slashIndex = collapsedText.lastIndexOf("/");
+	// similar to drawScrollableText but not centered
+	private void drawOverflowText(DrawContext context, TextRenderer textRenderer, Text text, int startX, int startY, int endX, int endY, int color, boolean hovered) {
+		int textRendererWidth = textRenderer.getWidth(text);
+		int availableWidth = endX - startX;
+		int y = startY + ((endY - startY) - 9) / 2;
 
-                if (slashIndex != -1) {
-                    String prefix = collapsedText.substring(0, slashIndex + 1);
-                    String lastPart = collapsedText.substring(slashIndex + 1);
+		// if hovered, we scroll
+		if (hovered) {
+			int extra = textRendererWidth - availableWidth;
+			double time = Util.getMeasuringTimeMs() / 1000.0;
+			double period = Math.max(extra / 8.0, 2.0);
+			double scroll = 0.5 - 0.5 * Math.cos(2 * Math.PI * time / period);
+			int offset = (int) (scroll * extra);
 
-                    if (textRenderer.getWidth(collapsedText) > availableWidth) {
-                        int prefixWidth = textRenderer.getWidth(prefix);
-                        int allowedForLast = availableWidth - prefixWidth;
+			context.enableScissor(startX, startY, endX, endY);
+			context.drawTextWithShadow(textRenderer, text, startX - offset, y, color);
+			context.disableScissor();
+		} else {
+			// otherwise try to shorten the text as much as possible
+			String rawText = text.getString();
 
-                        if (allowedForLast < 0) {
-                            finalText = trimToWidth(collapsedText, availableWidth, textRenderer);
-                        } else {
-                            if (textRenderer.getWidth(lastPart) > allowedForLast) {
-                                lastPart = trimToWidth(lastPart, allowedForLast, textRenderer);
-                            }
+			String collapsedText;
+			int colonIndex = rawText.indexOf(':');
 
-                            finalText = prefix + lastPart;
-                        }
-                    }
-                } else {
-                    finalText = trimToWidth(collapsedText, availableWidth, textRenderer);
-                }
-            } else {
-                if (textRenderer.getWidth(finalText) > availableWidth) {
-                    finalText = trimToWidth(finalText, availableWidth, textRenderer);
-                }
-            }
+			// if no colon, prob nothing to collapse
+			if (colonIndex == -1) {
+				collapsedText = rawText;
+			} else {
+				int lastSlashIndex = rawText.lastIndexOf('/');
 
-            context.enableScissor(startX, startY, endX, endY);
-            context.drawTextWithShadow(textRenderer, Text.literal(finalText), startX, y, color);
-            context.disableScissor();
-        }
-    }
+				// if no slash after colon, leave as-is
+				if (lastSlashIndex == -1 || lastSlashIndex < colonIndex) {
+					collapsedText = rawText;
+				} else {
+					String namespace = rawText.substring(0, colonIndex + 1);
+					String lastPart = rawText.substring(lastSlashIndex + 1);
 
-    private String trimToWidth(String rawText, int availableWidth, TextRenderer textRenderer) {
-        if (textRenderer.getWidth(rawText) <= availableWidth) {
-            return rawText;
-        }
+					collapsedText = namespace + ".../" + lastPart;
+				}
+			}
 
-        int maxWidth = availableWidth - textRenderer.getWidth("...");
-        int trimIndex = rawText.length();
+			String finalText;
+			if (filter.trim().isEmpty()) {
+				finalText = collapsedText;
+			} else if (filter.length() >= (rawText.indexOf(':') + 1)) {
+				if (rawText.lastIndexOf('/') == -1) {
+					//... and no slash, put ... before
+					finalText = "..." + collapsedText.substring(rawText.indexOf(':') + 1);
+				} else {
+					// no namespace
+					finalText = collapsedText.substring(rawText.indexOf(':') + 1);
+				}
+			} else if (filter.length() > 1) {
+				int removeCount = Math.min(filter.length(), collapsedText.length());
+				finalText = "..." + collapsedText.substring(removeCount);
+			} else {
+				finalText = collapsedText;
+			}
 
-        while (trimIndex > 0 && textRenderer.getWidth(rawText.substring(0, trimIndex)) > maxWidth) {
-            trimIndex--;
-        }
-        
-        return rawText.substring(0, trimIndex) + "...";
-    }
+			if (filter.trim().isEmpty()) {
+				int slashIndex = collapsedText.lastIndexOf("/");
+
+				if (slashIndex != -1) {
+					String prefix = collapsedText.substring(0, slashIndex + 1);
+					String lastPart = collapsedText.substring(slashIndex + 1);
+
+					if (textRenderer.getWidth(collapsedText) > availableWidth) {
+						int prefixWidth = textRenderer.getWidth(prefix);
+						int allowedForLast = availableWidth - prefixWidth;
+
+						if (allowedForLast < 0) {
+							finalText = trimToWidth(collapsedText, availableWidth, textRenderer);
+						} else {
+							if (textRenderer.getWidth(lastPart) > allowedForLast) {
+								lastPart = trimToWidth(lastPart, allowedForLast, textRenderer);
+							}
+
+							finalText = prefix + lastPart;
+						}
+					}
+				} else {
+					finalText = trimToWidth(collapsedText, availableWidth, textRenderer);
+				}
+			} else {
+				if (textRenderer.getWidth(finalText) > availableWidth) {
+					finalText = trimToWidth(finalText, availableWidth, textRenderer);
+				}
+			}
+
+			context.enableScissor(startX, startY, endX, endY);
+			context.drawTextWithShadow(textRenderer, Text.literal(finalText), startX, y, color);
+			context.disableScissor();
+		}
+	}
+
+	private String trimToWidth(String rawText, int availableWidth, TextRenderer textRenderer) {
+		if (textRenderer.getWidth(rawText) <= availableWidth) {
+			return rawText;
+		}
+
+		int maxWidth = availableWidth - textRenderer.getWidth("...");
+		int trimIndex = rawText.length();
+
+		while (trimIndex > 0 && textRenderer.getWidth(rawText.substring(0, trimIndex)) > maxWidth) {
+			trimIndex--;
+		}
+
+		return rawText.substring(0, trimIndex) + "...";
+	}
 }
