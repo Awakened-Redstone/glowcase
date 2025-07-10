@@ -5,10 +5,10 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.ClickableWidget;
+import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.text.Text;
 import net.minecraft.util.Util;
 
@@ -16,7 +16,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class SuggestionListWidget<T> extends ClickableWidget {
 	private final TextRenderer textRenderer;
-	private final MinecraftClient client;
 
 	private final List<T> suggestions = new ArrayList<>();
 	private @NotNull String filter = "";
@@ -40,8 +39,6 @@ public class SuggestionListWidget<T> extends ClickableWidget {
 	public SuggestionListWidget(TextRenderer textRenderer, int x, int y, int width, int height, int baseLineHeight, int padding, int maxRows, Consumer<T> onSelect, Function<T, String> toStringFunction) {
 		super(x, y, width, height, Text.empty());
 
-		this.client = MinecraftClient.getInstance();
-
 		this.baseLineHeight = baseLineHeight;
 		this.padding = padding;
 		this.maxRows = maxRows;
@@ -50,6 +47,21 @@ public class SuggestionListWidget<T> extends ClickableWidget {
 		this.textRenderer = textRenderer;
 		this.characterWidth = 1;
 		setWidth(width);
+	}
+
+	public static <T> SuggestionListWidget<T> forTextField(TextFieldWidget textField, TextRenderer textRenderer, Function<T, String> toStringFunction) {
+		return new SuggestionListWidget<>(textRenderer, textField.getX(), textField.getY() + textField.getHeight() + 5, textField.getWidth(), 100, 10, 4, 5,
+			a -> textField.setText(toStringFunction.apply(a)), toStringFunction);
+	}
+
+	public static <T> SuggestionListWidget<T> forTextFieldWithStaticSuggestions(TextFieldWidget textField, TextRenderer textRenderer, List<T> suggestions, Function<T, String> toStringFunction) {
+		var suggestionWidget = forTextField(textField, textRenderer, toStringFunction);
+
+		textField.setChangedListener((text) -> {
+			suggestionWidget.updateSuggestions(suggestions, text);
+		});
+
+		return suggestionWidget;
 	}
 
 	@Override

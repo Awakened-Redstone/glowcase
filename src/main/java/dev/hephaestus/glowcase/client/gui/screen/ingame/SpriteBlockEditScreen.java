@@ -17,11 +17,8 @@ import net.minecraft.text.TextColor;
 import net.minecraft.util.Identifier;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.function.Function;
 
 public class SpriteBlockEditScreen extends GlowcaseScreen {
 	private final SpriteBlockEntity spriteBlockEntity;
@@ -102,12 +99,7 @@ public class SpriteBlockEditScreen extends GlowcaseScreen {
 		ResourceManager resourceManager = this.client.getResourceManager();
 		validSprites = allValidSprites(resourceManager);
 
-		suggestionWidget = new SuggestionListWidget<>(this.client.textRenderer, spriteWidget.getX(), spriteWidget.getY() + spriteWidget.getHeight() + 5, spriteWidget.getWidth(), 100, 10, 4, 5,
-			(suggestion) -> spriteWidget.setText(suggestion), s -> s);
-
-		spriteWidget.setChangedListener((text) -> {
-			suggestionWidget.updateSuggestions(validSprites, text);
-		});
+		suggestionWidget = SuggestionListWidget.forTextFieldWithStaticSuggestions(spriteWidget, client.textRenderer, validSprites, Function.identity());
 	}
 
 	/**

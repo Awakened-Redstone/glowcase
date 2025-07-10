@@ -13,7 +13,6 @@ import dev.hephaestus.glowcase.util.RequiresEmiLoaded;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
@@ -89,13 +88,7 @@ public class RecipeBlockEditScreen extends GlowcaseScreen {
 			this.zOffsetToggle.setMessage(Text.literal(this.recipeBlockEntity.zOffset.name()));
 		}).dimensions(width / 2 - 75, baseY + fontHeight + 75, 150, 20).build();
 
-		suggestionWidget = new SuggestionListWidget<>(
-			this.client.textRenderer,
-			recipeWidget.getX(), recipeWidget.getY() + recipeWidget.getHeight() + 5, recipeWidget.getWidth(),
-			100, 10, 4, 5,
-			(suggestion) -> recipeWidget.setText(suggestion.toString()),
-			Identifier::toString
-		);
+		suggestionWidget = SuggestionListWidget.forTextField(recipeWidget, client.textRenderer, Identifier::toString);
 
 		recipeWidget.setChangedListener((text) -> {
 			if (Identifier.tryParse(this.recipeWidget.getText()) != null) {
@@ -111,7 +104,7 @@ public class RecipeBlockEditScreen extends GlowcaseScreen {
 
 		this.addDrawableChild(this.recipeWidget);
 		this.addDrawableChild(this.rotationXWidget);
-        this.addDrawableChild(this.rotationYWidget);
+		this.addDrawableChild(this.rotationYWidget);
 		this.addDrawableChild(this.zOffsetToggle);
 
 		if (GlowcaseClient.EMI_LOADED && glowcaseWidgetHolder.get() == null) {
@@ -120,9 +113,9 @@ public class RecipeBlockEditScreen extends GlowcaseScreen {
 	}
 
 	@Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        super.render(context, mouseX, mouseY, delta);
-        if (this.client == null) return;
+	public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+		super.render(context, mouseX, mouseY, delta);
+		if (this.client == null) return;
 
 		if (fontHeight == -1) {
 			fontHeight = this.client.textRenderer.fontHeight;
@@ -130,28 +123,28 @@ public class RecipeBlockEditScreen extends GlowcaseScreen {
 		}
 
 		context.drawTextWithShadow(
-            this.client.textRenderer,
-            Text.translatable("gui.glowcase.recipe"),
-            width / 2 - (this.client.textRenderer.getWidth(Text.translatable("gui.glowcase.recipe")) / 2),
-            baseY - fontHeight,
-            0xFFFFFFFF
-        );
+			this.client.textRenderer,
+			Text.translatable("gui.glowcase.recipe"),
+			width / 2 - (this.client.textRenderer.getWidth(Text.translatable("gui.glowcase.recipe")) / 2),
+			baseY - fontHeight,
+			0xFFFFFFFF
+		);
 
 		context.drawTextWithShadow(
-            this.client.textRenderer,
-            Text.translatable("gui.glowcase.pitch"),
-            ((width - 145) / 2) + 35 - (this.client.textRenderer.getWidth(Text.translatable("gui.glowcase.pitch")) / 2),
-            baseY + 40,
-            0xFFFFFFFF
-        );
+			this.client.textRenderer,
+			Text.translatable("gui.glowcase.pitch"),
+			((width - 145) / 2) + 35 - (this.client.textRenderer.getWidth(Text.translatable("gui.glowcase.pitch")) / 2),
+			baseY + 40,
+			0xFFFFFFFF
+		);
 
 		context.drawTextWithShadow(
-            this.client.textRenderer,
-            Text.translatable("gui.glowcase.yaw"),
-            ((width - 145) / 2) + 75 + 35 - (this.client.textRenderer.getWidth(Text.translatable("gui.glowcase.yaw")) / 2),
-            baseY + 40,
-            0xFFFFFFFF
-        );
+			this.client.textRenderer,
+			Text.translatable("gui.glowcase.yaw"),
+			((width - 145) / 2) + 75 + 35 - (this.client.textRenderer.getWidth(Text.translatable("gui.glowcase.yaw")) / 2),
+			baseY + 40,
+			0xFFFFFFFF
+		);
 		// render the list over everything
 		suggestionWidget.renderWidget(context, mouseX, mouseY, delta);
 
