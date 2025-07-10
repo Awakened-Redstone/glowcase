@@ -61,7 +61,7 @@ public record ItemAcceptorBlockEntityRenderer(BlockEntityRendererFactory.Context
 
 		itemRenderer.renderItem(entity.getDisplayItemStack(), ItemDisplayContext.GUI, light, OverlayTexture.DEFAULT_UV, matrices, vertexConsumers, entity.getWorld(), 0);
 
-		//TODO: is this needed still?
+		//FIXME: is this needed still?
 		RenderSystem.setShaderLights(shaderLights);
 
 		// Render count

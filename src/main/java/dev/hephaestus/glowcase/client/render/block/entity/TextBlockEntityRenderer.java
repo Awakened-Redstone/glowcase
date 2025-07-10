@@ -131,8 +131,6 @@ public class TextBlockEntityRenderer extends BakedBlockEntityRenderer<TextBlockE
 				matrices.multiply(new Quaternionf().rotateLocalY(MathHelper.PI));
 				matrices.translate(-width, 0, -0.025D);
 
-				//TODO: add rectangle?
-
 				//drawFillRect(matrices, vertexConsumers, (int) width + 5, (i + 1) * 12 - 2, -5, i * 12 - 2, entity.backgroundColor);
 				matrices.pop();
 			}

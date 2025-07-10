@@ -88,7 +88,7 @@ public class Vec3FieldsWidget extends ContainerWidget {
 
 	@Override
 	protected int getContentsHeightWithPadding() {
-		return 9 + 4; // TODO: get this right
+		return 9 + 4; //FIXME: get this right
 	}
 
 	@Override
