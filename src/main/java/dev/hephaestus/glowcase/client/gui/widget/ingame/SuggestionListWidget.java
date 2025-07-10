@@ -33,7 +33,7 @@ import org.joml.Matrix3x2fStack;
 
 public class SuggestionListWidget<T> extends ClickableWidget {
 	public static final Identifier BLUR_ID = Identifier.ofVanilla("blur");
-	public static final Framebuffer FRAMEBUFFER = new SimpleFramebuffer("Glowcase Suggestions", 1, 1, true);
+	public static final Framebuffer FRAMEBUFFER = new SimpleFramebuffer("Glowcase Suggestions", 1, 1, false);
 	public static final Pool POOL = new Pool(3);
 	private final TextRenderer textRenderer;
 	private final MinecraftClient client;

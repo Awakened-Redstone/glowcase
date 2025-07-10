@@ -88,7 +88,7 @@ public abstract class GuiRendererMixin {
 
 	@Unique
 	private void renderSuggestionsBlur(Supplier<String> nameSupplier, GpuBufferSlice fogBuffer, GpuBuffer indexBuffer, VertexFormat.IndexType indexType, GpuBufferSlice dynamicTransformsBuffer, int from, int to) {
-		RenderSystem.getDevice().createCommandEncoder().clearColorAndDepthTextures(SuggestionListWidget.FRAMEBUFFER.getColorAttachment(), 0, SuggestionListWidget.FRAMEBUFFER.getDepthAttachment(), 1);
+		RenderSystem.getDevice().createCommandEncoder().clearColorTexture(SuggestionListWidget.FRAMEBUFFER.getColorAttachment(), 0);
 
 		MinecraftClient client = MinecraftClient.getInstance();
 		Framebuffer framebuffer = SuggestionListWidget.FRAMEBUFFER;
