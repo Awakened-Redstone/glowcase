@@ -6,11 +6,9 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import com.mojang.blaze3d.pipeline.RenderPipeline;
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gl.Framebuffer;
-import net.minecraft.client.gl.PostEffectProcessor;
 import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gl.SimpleFramebuffer;
 import net.minecraft.client.gui.DrawContext;
@@ -18,8 +16,6 @@ import net.minecraft.client.gui.ScreenRect;
 import net.minecraft.client.gui.render.state.SimpleGuiElementRenderState;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.render.DefaultFramebufferSet;
-import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.texture.TextureSetup;
 import net.minecraft.client.util.Pool;
@@ -131,9 +127,6 @@ public class SuggestionListWidget<T> extends ClickableWidget {
     public void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
         if (suggestions.isEmpty()) return;
 
-		//int fbWidth = client.getWindow().getFramebufferWidth();
-		//int fbHeight = client.getWindow().getFramebufferHeight();
-
 		context.createNewRootLayer();
 		context.state.addSimpleElement(new SimpleGuiElementRenderState() {
 			@Override
@@ -185,11 +178,6 @@ public class SuggestionListWidget<T> extends ClickableWidget {
 
 		context.drawTexturedQuad(RenderPipelines.GUI_TEXTURED, FRAMEBUFFER.getColorAttachmentView(), 0, 0, FRAMEBUFFER.textureWidth / this.client.getWindow().getScaleFactor(), FRAMEBUFFER.textureHeight / this.client.getWindow().getScaleFactor(), 0, 1, 0, 1, -1);
 
-        /*float blurValue = (float) MinecraftClient.getInstance().options.getMenuBackgroundBlurrinessValue();
-        if (blurValue >= 1.0F) {
-            context.applyBlur();
-        }*/
-
         context.fill(x, y, x + listWidth, y + dynamicHeight, bgColor);
 
         drawOutline(context, x, y, listWidth, dynamicHeight, 0xFFFFFFFF);
@@ -208,15 +196,15 @@ public class SuggestionListWidget<T> extends ClickableWidget {
             int suggestionY = y + i * adjustedLineHeight;
             
             // highlight hovered suggestion
-            if (mouseX >= x && mouseX <= x + listWidth && mouseY >= suggestionY && mouseY < suggestionY + adjustedLineHeight) {
+			boolean hover = mouseX >= x && mouseX <= x + listWidth && mouseY >= suggestionY && mouseY < suggestionY + adjustedLineHeight;
+			if (hover) {
                 context.fill(x, suggestionY, x + listWidth, suggestionY + adjustedLineHeight, 0xFF217C08);
                 drawOutline(context, x, suggestionY, listWidth, adjustedLineHeight, 0xFFFFFFFF);
             }
 
             // detect if the text is too long AND if the item is hovered, then scroll, otherwise don't
-            boolean suggestionHovered = (mouseX >= x && mouseX <= x + listWidth && mouseY >= suggestionY && mouseY < suggestionY + adjustedLineHeight);
             if (textRenderer.getWidth(suggestionText) > (this.getWidth() - padding - 20)) {
-                drawOverflowText(context, textRenderer, Text.literal(suggestionText), x + padding, suggestionY + padding - 2, x + listWidth - padding, suggestionY + adjustedLineHeight, 0xFFFFFFFF, suggestionHovered);
+                drawOverflowText(context, textRenderer, Text.literal(suggestionText), x + padding, suggestionY + padding - 2, x + listWidth - padding, suggestionY + adjustedLineHeight, 0xFFFFFFFF, hover);
             } else {
                 context.drawTextWithShadow(textRenderer, Text.literal(suggestionText), x + padding, suggestionY + padding + 1, 0xFFFFFFFF);
             }
