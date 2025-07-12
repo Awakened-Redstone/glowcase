@@ -3,6 +3,7 @@ package dev.hephaestus.glowcase.block.entity;
 import com.mojang.logging.LogUtils;
 import com.mojang.serialization.Codec;
 import dev.hephaestus.glowcase.Glowcase;
+import dev.hephaestus.glowcase.client.util.SoundPlayerProxy;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
@@ -13,11 +14,6 @@ import net.minecraft.client.sound.AbstractSoundInstance;
 import net.minecraft.client.sound.SoundInstance;
 import net.minecraft.client.sound.SoundManager;
 import net.minecraft.client.sound.TickableSoundInstance;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtOps;
-import net.minecraft.registry.RegistryOps;
-import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.storage.ReadView;
@@ -29,9 +25,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.slf4j.Logger;
 
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
 
 public class SoundPlayerBlockEntity extends GlowcaseBlockEntity {
 	private static final Logger LOGGER = LogUtils.getLogger();
@@ -97,8 +91,8 @@ public class SoundPlayerBlockEntity extends GlowcaseBlockEntity {
 
 		final PositionedSoundLoop oldInstance = entity.nowPlaying;
 		if (oldInstance != null) {
-			if (oldInstance.isCompatible() && soundManager.isPlaying(oldInstance)) {
-				// no-op when already playing something
+			if (oldInstance.isCompatible() && ((SoundPlayerProxy) soundManager).glowcase$isQueuedOrPlaying(oldInstance)) {
+				// no-op when already playing something, or waiting to be played
 				return;
 			}
 
