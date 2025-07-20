@@ -119,6 +119,7 @@ public abstract class GlowcaseBlock extends BlockWithEntity {
 		return false;
 	}
 
+	@Deprecated
 	public void appendTooltip(ItemStack stack, Item.TooltipContext context, TooltipDisplayComponent displayComponent, Consumer<Text> textConsumer, TooltipType type) {
 	}
 
