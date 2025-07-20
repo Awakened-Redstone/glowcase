@@ -111,7 +111,12 @@ public class ItemProviderBlockEntity extends GlowcaseBlockEntity implements Infi
 		boolean holdingSameAsDisplay = ItemStack.areItemsAndComponentsEqual(getStack(), itemStack);
 
 		if (itemStack.isEmpty()) {
-			player.setStackInHand(Hand.MAIN_HAND, getStack().copy());
+			ItemStack stackToGive = getStack().copy();
+			if (player.isSneaking()) {
+				stackToGive.setCount(stackToGive.getMaxCount());
+			}
+
+			player.setStackInHand(Hand.MAIN_HAND, stackToGive);
 		} else if (holdingSameAsDisplay) {
 			itemStack.increment(getStack().getCount());
 			itemStack.capCount(itemStack.getMaxCount());
